@@ -37,6 +37,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.SystemClock;
 
 //Primary activity that executes cascade algorithm.
 public class FdActivity extends Activity implements CvCameraViewListener {
@@ -258,7 +259,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
 
     //Primary camera operation
     public synchronized Mat onCameraFrame(Mat inputFrame) {   	
-    	
+    	double frametime = 0;
     	//If bluetooth is disconnected during use, replays "bluetooth connected" sound clip after reconnecting
     	if(mUntetheredBT.getBluetoothState() == UntetheredBT.BT_NOT_CONNECTED) {
     		flag = 1;
@@ -270,7 +271,11 @@ public class FdActivity extends Activity implements CvCameraViewListener {
     	    flag = 0;
     	    //mp.release();
     	}
-
+    	
+    	//Print frame rate
+    	frametime = SystemClock.elapsedRealtime() - frametime;
+    	Log.w("FrameRate", String.valueOf(frameRate(frametime)) + "fps");
+    	
     	//Copy input frame from camera into mat
         inputFrame.copyTo(mRgba);
         //Convert image to grayscale
@@ -315,6 +320,10 @@ public class FdActivity extends Activity implements CvCameraViewListener {
            if (!mp.equals(null)){
          	   //mp.release();
            }
+           
+           //Print distances
+           Log.w("distance pos x", String.valueOf(logoArray[0].x));
+           Log.w("distance pos image width", String.valueOf(logoArray[0].width));
            
            //4 1/2 ft too far back go forward
            if (logoArray[0].width <= 52) { //52 is the width of the logo at 4 1/2 ft, found through testing
@@ -367,7 +376,6 @@ public class FdActivity extends Activity implements CvCameraViewListener {
         					try {
 								Thread.sleep(100);
 							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
         					timer++;
@@ -449,4 +457,8 @@ public class FdActivity extends Activity implements CvCameraViewListener {
   			}
   		}
   	};
+
+	private final double frameRate(double frameTime){
+		return (1/frameTime);
+	}
 }
