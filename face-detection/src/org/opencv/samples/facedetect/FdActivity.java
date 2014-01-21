@@ -457,8 +457,14 @@ public class FdActivity extends Activity implements CvCameraViewListener {
   			}
   		}
   	};
-
+  	
+  	/**
+  	 * Calculates frameRate
+  	 * @param frameTime
+  	 * @return frameRate in ms
+  	 */
 	private final double frameRate(double frameTime){
 		return (1/frameTime);
 	}
+	
 }
