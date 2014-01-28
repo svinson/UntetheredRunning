@@ -46,7 +46,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(255, 0, 0);
     public static final int        JAVA_DETECTOR       = 0;
 
-    private int                    flag = 0;
+    //private int                    flag = 0;
     private float 				   volume = 0.3f;
     private MediaPlayer			   mp = new MediaPlayer();
     private int					   threadRunning = 0;
@@ -73,7 +73,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
   	public static final String STATUS_TEXT = "statusText";
   	
   	//Private members
-  	private UntetheredBT mUntetheredBT = null;
+  	//private UntetheredBT mUntetheredBT = null;
 
   	//Initialize cascader and OpenCV manager on the phone.
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
@@ -163,7 +163,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
     		startStopBtn.setText(R.string.STOP_APP_STRING);
 
     		//If start pressed, open bluetooth connection
-        	while(true) {
+        	/*while(true) {
         		if(mUntetheredBT.getBluetoothState() == UntetheredBT.BT_CONNECTED) {
         			//Play "bluetooth connected" sound clip
             		mp = MediaPlayer.create(getApplicationContext(), R.raw.bluetoothconnected);
@@ -172,7 +172,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
             	    //mp.release();
             	    break;
         		}
-      	    }
+      	    }*/
     	    /*
         	if(mUntetheredBT.getBluetoothState() == UntetheredBT.BT_CONNECTED) {
 	        	//mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
@@ -214,7 +214,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
         super.onPause();
         
         //Stop the Bluetooth threads
-    	mUntetheredBT.stop();
+    	//mUntetheredBT.stop();
     	mAppRunning = false;
     	if (!mp.equals(null)){
     	   mp.release();
@@ -230,9 +230,9 @@ public class FdActivity extends Activity implements CvCameraViewListener {
         //Bluetooth
     	//Create a new UntetheredBT object
         
-    	mUntetheredBT = new UntetheredBT(this, mHandler);
+    	//mUntetheredBT = new UntetheredBT(this, mHandler);
     	//Start the UntetheredBT connection rolling.
-    	mUntetheredBT.start();
+    	//mUntetheredBT.start();
     	mAppRunning = true;
     }
 
@@ -261,7 +261,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
     public synchronized Mat onCameraFrame(Mat inputFrame) {   	
     	double frametime = 0;
     	//If bluetooth is disconnected during use, replays "bluetooth connected" sound clip after reconnecting
-    	if(mUntetheredBT.getBluetoothState() == UntetheredBT.BT_NOT_CONNECTED) {
+    	/*if(mUntetheredBT.getBluetoothState() == UntetheredBT.BT_NOT_CONNECTED) {
     		flag = 1;
     	}
     	else if (mUntetheredBT.getBluetoothState() == UntetheredBT.BT_CONNECTED && flag == 1) {
@@ -270,7 +270,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
     	    mp.start();
     	    flag = 0;
     	    //mp.release();
-    	}
+    	}*/
     	
     	//Print frame rate
     	frametime = SystemClock.elapsedRealtime() - frametime;
@@ -328,7 +328,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
            //4 1/2 ft too far back go forward
            if (logoArray[0].width <= 52) { //52 is the width of the logo at 4 1/2 ft, found through testing
         	   //Sends buzz to front and plays "front" sound clip
-               mUntetheredBT.sendCMD(UntetheredBT.FRONT_BUZZ);
+               //mUntetheredBT.sendCMD(UntetheredBT.FRONT_BUZZ);
                mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
                mp.setVolume(volume, volume);
        	       mp.start();
@@ -336,7 +336,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
            //2 1/2 ft too close go backward
            else if (logoArray[0].width >= 100) { //100 is the width of the logo at 2 1/2 ft, found through testing
         	 //Sends buzz to back and plays "back" sound clip
-               mUntetheredBT.sendCMD(UntetheredBT.BACK_BUZZ);
+               //mUntetheredBT.sendCMD(UntetheredBT.BACK_BUZZ);
                mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
                mp.setVolume(volume, volume);
        	       mp.start();
@@ -344,7 +344,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
            //move left
            else if (logoArray[0].tl().x <= leftBound.x) { //if logo crosses to left of left bound, left feedback
         	 //Sends buzz to left and plays "left" sound clip
-        	   mUntetheredBT.sendCMD(UntetheredBT.LEFT_BUZZ);
+        	   //mUntetheredBT.sendCMD(UntetheredBT.LEFT_BUZZ);
         	   mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
         	   mp.setVolume(volume, volume);
        	       mp.start();
@@ -352,14 +352,14 @@ public class FdActivity extends Activity implements CvCameraViewListener {
            //move right
            else if (logoArray[0].br().x >= rightBound.x) { //if logo crosses to right of right bound, right feedback
         	 //Sends buzz to right and plays "right" sound clip
-        	   mUntetheredBT.sendCMD(UntetheredBT.RIGHT_BUZZ);
+        	   //mUntetheredBT.sendCMD(UntetheredBT.RIGHT_BUZZ);
         	   mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
         	   mp.setVolume(volume, volume);
        	       mp.start();
            }
            //good position
            else {
-        	   mUntetheredBT.sendCMD(UntetheredBT.NO_BUZZ);
+        	   //mUntetheredBT.sendCMD(UntetheredBT.NO_BUZZ);
            }
         }
         //image cannot be found for x seconds, emergency stop
@@ -382,7 +382,7 @@ public class FdActivity extends Activity implements CvCameraViewListener {
         					//Not the best option should fix, probably shouldn't use the count like this
         					if (timer == TIME_OUT) {       	
         						//Buzzes all motors and plays "danger" sound clip
-        						mUntetheredBT.sendCMD(UntetheredBT.EMERGENCY_BUZZ);
+        						//mUntetheredBT.sendCMD(UntetheredBT.EMERGENCY_BUZZ);
         						mp = MediaPlayer.create(getApplicationContext(), R.raw.danger);
         						mp.setVolume(volume, volume);
         			       	    mp.start();
@@ -414,32 +414,32 @@ public class FdActivity extends Activity implements CvCameraViewListener {
     
     public void pressFront(View view)
     {
-    	mUntetheredBT.sendCMD(UntetheredBT.FRONT_BUZZ);
+    	//mUntetheredBT.sendCMD(UntetheredBT.FRONT_BUZZ);
     }
     
     public void pressLeft(View view)
     {
-    	mUntetheredBT.sendCMD(UntetheredBT.LEFT_BUZZ);
+    	//mUntetheredBT.sendCMD(UntetheredBT.LEFT_BUZZ);
     }
     
     public void pressRight(View view)
     {
-    	mUntetheredBT.sendCMD(UntetheredBT.RIGHT_BUZZ);
+    	//mUntetheredBT.sendCMD(UntetheredBT.RIGHT_BUZZ);
     }
     
     public void pressBack(View view)
     {
-    	mUntetheredBT.sendCMD(UntetheredBT.BACK_BUZZ);
+    	//mUntetheredBT.sendCMD(UntetheredBT.BACK_BUZZ);
     }
     
     public void pressNormal(View view)
     {
-    	mUntetheredBT.sendCMD(UntetheredBT.NO_BUZZ);
+    	//mUntetheredBT.sendCMD(UntetheredBT.NO_BUZZ);
     }
     
     public void pressEmergency(View view)
     {
-    	mUntetheredBT.sendCMD(UntetheredBT.EMERGENCY_BUZZ);
+    	//mUntetheredBT.sendCMD(UntetheredBT.EMERGENCY_BUZZ);
     }
     
   	//Handler that retrieves information from the thread
