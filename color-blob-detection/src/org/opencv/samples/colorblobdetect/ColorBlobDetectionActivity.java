@@ -21,6 +21,7 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -32,6 +33,8 @@ import android.view.View.OnTouchListener;
 public class ColorBlobDetectionActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "OCVSample::Activity";
 
+    private float 				 volume = 0.3f;
+    private MediaPlayer			 mp = new MediaPlayer();
     private boolean              mIsColorSelected = false;
     private Mat                  mRgba;
     private Scalar               mBlobColorRgba;
@@ -171,9 +174,12 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mRgba = inputFrame.rgba();
         mMOP2f1 = new MatOfPoint2f();
         mMOP2f2 = new MatOfPoint2f();
- 
-        
 
+        //Copied threshold code from last year's group
+        double threshold = 120;
+        Point leftBound = new Point(threshold, 0); //30 from left edge of view, with current #s
+        Point rightBound = new Point(0, 0); //30 from right edge of view, with current #s
+ 
         if (mIsColorSelected) {
             mDetector.process(mRgba);
             List<MatOfPoint> contours = mDetector.getContours();
@@ -200,6 +206,43 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);
                 Log.d("Mine", "Center: X: " + center.x + " Y: " + center.y);
                 Log.d("Mine", "Radius: " + radius[0]);
+            }
+            
+            
+            //Object Threshold code
+            
+            //4 1/2 ft too far back go forward
+ //           if (logoArray[0].width <= 52) { //52 is the width of the logo at 4 1/2 ft, found through testing
+         	   //Sends buzz to front and plays "front" sound clip
+//                mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
+//                mp.setVolume(volume, volume);
+ //       	       mp.start();
+  //          }
+            //2 1/2 ft too close go backward
+  //          else if (logoArray[0].width >= 100) { //100 is the width of the logo at 2 1/2 ft, found through testing
+         	 //Sends buzz to back and plays "back" sound clip
+    //            mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
+     //           mp.setVolume(volume, volume);
+       // 	       mp.start();
+       //     }
+            //move left
+            if (center.x <= leftBound.x) { //if logo crosses to left of left bound, left feedback
+         	 //Sends buzz to left and plays "left" sound clip
+
+         	   mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
+         	   mp.setVolume(volume, volume);
+        	   mp.start();
+            }
+            //move right
+            else if (center.x >= rightBound.x) { //if logo crosses to right of right bound, right feedback
+         	 //Sends buzz to right and plays "right" sound clip
+         	   mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
+         	   mp.setVolume(volume, volume);
+        	   mp.start();
+            }
+            //good position
+            else {
+
             }
             
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);

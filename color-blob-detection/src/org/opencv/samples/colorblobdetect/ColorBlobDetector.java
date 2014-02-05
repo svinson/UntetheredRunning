@@ -11,9 +11,11 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import android.graphics.Bitmap;
 import android.os.Environment;
@@ -103,7 +105,7 @@ public class ColorBlobDetector {
 	            e.printStackTrace();
 	     }*/
         Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        
+                    
         /*Imgproc.HoughCircles(mDilatedMask, circles, Imgproc.CV_HOUGH_GRADIENT, 2.0,100);// mDilatedMask.rows()/8);
         
         for (int x = 0; x < circles.cols(); x++) 
@@ -141,9 +143,25 @@ public class ColorBlobDetector {
                 mContours.add(contour);
             }
         }
+        //moments
+        List<Moments> mu = new ArrayList<Moments>(mContours.size());
+            for (int i = 0; i < mContours.size(); i++) {
+                mu.add(i, Imgproc.moments(mContours.get(i), false));
+            }
+          
+            //mass center
+            List<MatOfPoint2f> mc = new ArrayList<MatOfPoint2f>(mContours.size()); 
+            for( int i = 0; i < mContours.size(); i++ ){
+            	Point p = new Point((mu.get(i).get_m10() / mu.get(i).get_m00()),(mu.get(i).get_m01()/mu.get(i).get_m00()));
+            	MatOfPoint2f v = new MatOfPoint2f(p);
+            	Log.d("Mine", "Center of Mass: X: " + p.x + " Y: " + p.y);
+            	mc.add(i, v);
+            }
     }
 
     public List<MatOfPoint> getContours() {
         return mContours;
     }
+    
+    
 }
