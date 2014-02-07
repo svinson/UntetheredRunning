@@ -13,6 +13,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import android.graphics.Bitmap;
@@ -34,6 +35,7 @@ public class ColorBlobDetector {
     Mat mPyrDownMat = new Mat();
     Mat mHsvMat = new Mat();
     Mat mMask = new Mat();
+    Mat mMask1 = new Mat();
     Mat mDilatedMask = new Mat();
     Mat mHierarchy = new Mat();
 
@@ -75,51 +77,57 @@ public class ColorBlobDetector {
         mMinContourArea = area;
     }
 
-    public void process(Mat rgbaImage) {
+    public Mat process(Mat rgbaImage) {
     	Bitmap bmp = null;
     	Mat circles = new Mat();
     	Point pt;
     	int radius;
+    	
+    	Log.d("Color", "H Lower: " + mLowerBound.val[0] + "Higher: " + mUpperBound.val[0]);
+    	Log.d("Color", "S Lower: " + mLowerBound.val[1] + "Higher: " + mUpperBound.val[1]);
+    	Log.d("Color", "V Lower: " + mLowerBound.val[2] + "Higher: " + mUpperBound.val[2]);
+    /*	mLowerBound.val[0] = 0;
+        mUpperBound.val[0] = 10;
+
+        mLowerBound.val[1] = 100;
+        mUpperBound.val[1] = 150;
+
+        mLowerBound.val[2] = 150;
+        mUpperBound.val[2] = 255;
+
+        mLowerBound.val[3] = 0;
+        mUpperBound.val[3] = 255;*/
+    	
+    	/*mLowerBound.val[0] = 30;
+        mUpperBound.val[0] = 160;
+
+        mLowerBound.val[1] = 0;
+        mUpperBound.val[1] = 0;
+
+        mLowerBound.val[2] = 0;
+        mUpperBound.val[2] = 0;
+
+        mLowerBound.val[3] = 0;
+        mUpperBound.val[3] = 255;*/
+    	
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
+        //Imgproc.blur(mPyrDownMat, mPyrDownMat, new Size(2,2));
         Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
-        Log.d("Mine", "Lower: " + mLowerBound.val[2] + "Higher: " + mUpperBound.val[2]);
+        
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
-        //Core.inRange(mHsvMat, new Scalar(20,100,150), new Scalar(70, 210, 200), mMask);
+        //Core.inRange(mHsvMat, new Scalar(225, 111, 205), new Scalar(255, 211, 205), mMask1);
+        //Core.bitwise_xor(mMask, mMask1, mMask);
+        //Core.inRange(mHsvMat, new Scalar(0,127,200), new Scalar(28, 226, 300), mMask);
         Imgproc.dilate(mMask, mDilatedMask, new Mat());
-
+        Imgproc.pyrUp(mDilatedMask, rgbaImage);
+        Imgproc.pyrUp(rgbaImage, rgbaImage);
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         
-        bmp = Bitmap.createBitmap(mDilatedMask.cols(), mDilatedMask.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(mDilatedMask, bmp);
-        /*try {
-        	File f = new File(Environment.getExternalStorageDirectory()
-                    + File.separator + "test.bmp");
-            FileOutputStream out = new FileOutputStream(Environment.getExternalStorageDirectory()
-                    + File.separator + "test.bmp");
-            bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
-            out.close();
-	     } catch (Exception e) {
-	            e.printStackTrace();
-	     }*/
+       
         Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         
-        /*Imgproc.HoughCircles(mDilatedMask, circles, Imgproc.CV_HOUGH_GRADIENT, 2.0,100);// mDilatedMask.rows()/8);
-        
-        for (int x = 0; x < circles.cols(); x++) 
-        {
-	        double vCircle[] = circles.get(0,x);
-	
-	        if (vCircle == null)
-	            break;
-	
-	        pt = new Point(Math.round(vCircle[0]), Math.round(vCircle[1]));
-	        radius = (int)Math.round(vCircle[2]);
-	
-	        // draw the found circle
-	        Core.circle(rgbaImage, pt, radius, new Scalar(0,255,0), 3);
-	        Core.circle(rgbaImage, pt, 3, new Scalar(0,0,255), 3);
-        }*/
+       
         
         // Find max contour area
         double maxArea = 0;
@@ -130,7 +138,6 @@ public class ColorBlobDetector {
             if (area > maxArea)
                 maxArea = area;
         }
-
         // Filter contours by area and resize to fit the original image size
         mContours.clear();
         each = contours.iterator();
@@ -141,6 +148,8 @@ public class ColorBlobDetector {
                 mContours.add(contour);
             }
         }
+		return rgbaImage;
+       
     }
 
     public List<MatOfPoint> getContours() {
