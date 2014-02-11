@@ -18,12 +18,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".BootCampletedReceiver" >
-	    <intent-filter>
-	        <action android:name="android.intent.action.BOOT_COMPLETED" />
-	    </intent-filter>
-	    
-	</receiver>
+        
+        <receiver android:name=".BootCompletedReceiver" >
+	    	<intent-filter>
+	        	<action android:name="android.intent.action.BOOT_COMPLETED" />
+	    	</intent-filter>
+		</receiver>
+		
     </application>
 
     <supports-screens android:resizeable="true"
@@ -32,7 +33,7 @@
                       android:largeScreens="true"
                       android:anyDensity="true" />
 
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11" />
+    <uses-sdk android:minSdkVersion="16"/>
 
     <uses-permission android:name="android.permission.CAMERA"/>
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
