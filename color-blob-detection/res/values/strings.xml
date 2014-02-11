@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">OCV Color Blob Detection</string>
+    <string name="app_name">Untethered Running</string>
+    <string name="NOT_TRACKING">NOT TRACKING</string>
+    <string name="RIGHT">RIGHT</string>
+    <string name="LEFT">LEFT</string>
+    <string name="FORWARD">BACK</string>
+    <string name="BACK">BACK</string>
 </resources>

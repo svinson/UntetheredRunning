@@ -3,7 +3,9 @@ package org.opencv.samples.colorblobdetect;
 import java.util.List;
 
 import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
@@ -13,11 +15,8 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
-import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -26,9 +25,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.View.OnTouchListener;
+import android.widget.EditText;
+
 
 public class ColorBlobDetectionActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "OCVSample::Activity";
@@ -42,9 +43,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
+    private EditText             stateText;
 
     private float 				 volume = 0.3f;
-    //private MediaPlayer			 mp = new MediaPlayer();
+    private MediaPlayer			 mp;
     
     private MatOfPoint2f mMOP2f1; 
     private MatOfPoint2f mMOP2f2;
@@ -86,6 +88,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
         //mOpenCvCameraView.setMaxFrameSize(320, 240);
+        
+        stateText = (EditText) findViewById(R.id.stateText);
+        stateText.setText(R.string.NOT_TRACKING);
     }
 
     @Override
@@ -240,69 +245,38 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 //Core.circle(mRgba, center, 5, CONTOUR_COLOR, 3);
                 //Convert back to MatOfPoint and put the new values back into the contours list
                 mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);
+                
                 if (center.y < 40) {
             		Log.d("Mine", "LEFT: Point: X: " + center.x + " Y: " + center.y);
-            		//mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
-                    //mp.setVolume(volume, volume);
-            	    //mp.start();
+            		mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
+                    mp.setVolume(volume, volume);
+            	    mp.start();
+            	    stateText.setText(R.string.RIGHT);
                 }
             	if (center.y > 300) {
             		Log.d("Mine", "RIGHT: Point: X: " + center.x + " Y: " + center.y);
-            		//mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
-                    //mp.setVolume(volume, volume);
-            	    //mp.start();
+            		mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
+                    mp.setVolume(volume, volume);
+            	    mp.start();
+            	    stateText.setText(R.string.LEFT);
             	}
             	if (checkDistance(radius[0]) < 0) {
-            		/*mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
+            		mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
                     mp.setVolume(volume, volume);
-            	    mp.start();*/
+            	    mp.start();
+            	    stateText.setText(R.string.FORWARD);
             	}
             	if (checkDistance(radius[0]) > 0) {
-            		/*mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
+            		mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
                     mp.setVolume(volume, volume);
-            	    //mp.start();*/
+            	    mp.start();
+            	    stateText.setText(R.string.BACK);
             	}
             	
                 Log.d("Mine", "Radius Status" + checkDistance(radius[0]));
                 Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
                 Log.d("Center", "Radius: " + radius[0]);
             }
-            
-  //Object Threshold code
-            
-            //4 1/2 ft too far back go forward
- //           if (logoArray[0].width <= 52) { //52 is the width of the logo at 4 1/2 ft, found through testing
-         	   //Sends buzz to front and plays "front" sound clip
-//                mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
-//                mp.setVolume(volume, volume);
- //       	       mp.start();
-  //          }
-            //2 1/2 ft too close go backward
-  //          else if (logoArray[0].width >= 100) { //100 is the width of the logo at 2 1/2 ft, found through testing
-         	 //Sends buzz to back and plays "back" sound clip
-    //            mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
-     //           mp.setVolume(volume, volume);
-       // 	       mp.start();
-       //     }
-            //move left
-           /* if (center.x <= leftBound.x) { //if logo crosses to left of left bound, left feedback
-         	 //Sends buzz to left and plays "left" sound clip
-
-         	   mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
-         	   mp.setVolume(volume, volume);
-        	   mp.start();
-            }
-            //move right
-            else if (center.x >= rightBound.x) { //if logo crosses to right of right bound, right feedback
-         	 //Sends buzz to right and plays "right" sound clip
-         	   mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
-         	   mp.setVolume(volume, volume);
-        	   mp.start();
-            }
-            //good position
-            else {
-
-            }*/
 
             
             for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
