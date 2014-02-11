@@ -11,10 +11,10 @@ public class BootCompletedReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent arg1) {
-        Log.w(TAG, "starting service...");
-		Intent myIntent = new Intent(context, ColorBlobDetectionActivity.class);
-		myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		context.startActivity(myIntent);
+    	Log.w(TAG, "starting service...");
+    	Intent myIntent = new Intent(context, ColorBlobDetectionActivity.class);
+    	myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    	context.startActivity(myIntent);
     }
 
 }
