@@ -189,10 +189,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	}
     	
     	public boolean equals(Circle other) {
-    		if(this.mCenter.y >= other.mCenter.y - 2 && this.mCenter.y <= other.mCenter.y + 2
-    				&& this.mRadius > 50 && other.mRadius > 50) {
-    			Log.d("Mine", "Center: X: " + this.mCenter.x + " Y: " + this.mCenter.y);
-    			Log.d("Mine", "Center: X: " + other.mCenter.x + " Y: " + other.mCenter.y);
+    		if(this.mCenter.y >= other.mCenter.y - 10 && this.mCenter.y <= other.mCenter.y + 10
+    				&& this.mRadius > 20 && other.mRadius > 20) {
+    			Log.d("EQ", "Center: X: " + this.mCenter.x + " Y: " + this.mCenter.y);
+    			Log.d("EQ", "Center: X: " + other.mCenter.x + " Y: " + other.mCenter.y);
     			return true;
     		}
     		return false;
@@ -219,11 +219,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             Circle[] circle = new Circle[contours.size()];
             Circle myCircle = new Circle();
            // Log.e(TAG, "Contours count: " + contours.size());
-            Point center = new Point();
-            float[] radius = new float[1];
+            Point center; 
+            float[] radius; 
             for(int i=0;i<contours.size();i++) {
 				//Convert contours(i) from MatOfPoint to MatOfPoint2f
-                contours.get(0).convertTo(mMOP2f1, CvType.CV_32FC2);
+                contours.get(i).convertTo(mMOP2f1, CvType.CV_32FC2);
 				//Processing on mMOP2f1 which is in type MatOfPoint2f
                 Imgproc.approxPolyDP(mMOP2f1, mMOP2f2, Imgproc.arcLength(mMOP2f1, true) * 0.02, true);
                 Point[] points = mMOP2f2.toArray();
@@ -233,8 +233,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 }
                // Log.d("Mine", "Channels: " + mMOP2f2.total());
                 //RotatedRect rec =  Imgproc.minAreaRect(mMOP2f2);
+                center = new Point();
+                radius = new float[1];
                 Imgproc.minEnclosingCircle(mMOP2f2, center, radius);
                 circle[i] = new Circle(center, radius[0]);
+                Log.d("FOUND", "Circle: " + i + "X: " + center.x + "Y: " + center.y);
                 if(points.length == 3 || points.length == 4)
                 	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
                 //Core.circle(mRgba, center, 5, CONTOUR_COLOR, 3);
@@ -303,12 +306,17 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             else {
 
             }*/
+            
+            for(int i=0; i < contours.size(); i++) {
+            	Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
+            }
 
             
             for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
+            	
             	for(int j=i+1; j < contours.size(); j++) {
             		if(circle[i].equals(circle[j])) {
-            			Log.d("FOUND", "i" + i + " j:" + j);
+            			Log.d("FOUNDMATCH", "i" + i + " j:" + j);
             			myCircle = circle[i];
             			//Log.d("Mine", "Center: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
                         //Log.d("Mine", "Radius: " + myCircle.mRadius);
