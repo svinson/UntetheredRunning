@@ -194,16 +194,15 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	}
     	
     	public boolean equals(Circle other) {
-    		if(this.mCenter.y >= other.mCenter.y - 2 && this.mCenter.y <= other.mCenter.y + 2
-    				&& this.mRadius > 50 && other.mRadius > 50) {
-    			Log.d("Mine", "Center: X: " + this.mCenter.x + " Y: " + this.mCenter.y);
-    			Log.d("Mine", "Center: X: " + other.mCenter.x + " Y: " + other.mCenter.y);
+    		if(this.mCenter.y >= other.mCenter.y - 10 && this.mCenter.y <= other.mCenter.y + 10
+    				&& this.mRadius > 20 && other.mRadius > 20) {
+    			Log.d("EQ", "Center: X: " + this.mCenter.x + " Y: " + this.mCenter.y);
+    			Log.d("EQ", "Center: X: " + other.mCenter.x + " Y: " + other.mCenter.y);
     			return true;
     		}
     		return false;
     	}
     }
-    
     
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
@@ -214,7 +213,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         double threshold = 120;
         Point leftBound = new Point(threshold, 0); //30 from left edge of view, with current #s
         Point rightBound = new Point(0, 0); //30 from right edge of view, with current #s
-
+        boolean found = false;
       
         if (mIsColorSelected) {
             mRgba = mDetector.process(mRgba);
@@ -224,11 +223,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             Circle[] circle = new Circle[contours.size()];
             Circle myCircle = new Circle();
            // Log.e(TAG, "Contours count: " + contours.size());
-            Point center = new Point();
-            float[] radius = new float[1];
+            Point center; 
+            float[] radius; 
             for(int i=0;i<contours.size();i++) {
 				//Convert contours(i) from MatOfPoint to MatOfPoint2f
-                contours.get(0).convertTo(mMOP2f1, CvType.CV_32FC2);
+                contours.get(i).convertTo(mMOP2f1, CvType.CV_32FC2);
 				//Processing on mMOP2f1 which is in type MatOfPoint2f
                 Imgproc.approxPolyDP(mMOP2f1, mMOP2f2, Imgproc.arcLength(mMOP2f1, true) * 0.02, true);
                 Point[] points = mMOP2f2.toArray();
@@ -238,40 +237,17 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 }
                // Log.d("Mine", "Channels: " + mMOP2f2.total());
                 //RotatedRect rec =  Imgproc.minAreaRect(mMOP2f2);
+                center = new Point();
+                radius = new float[1];
                 Imgproc.minEnclosingCircle(mMOP2f2, center, radius);
                 circle[i] = new Circle(center, radius[0]);
-                if(points.length == 3 || points.length == 4)
+                Log.d("FOUND", "Circle: " + i + "X: " + center.x + "Y: " + center.y);
+                if(points.length > 6)
                 	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
                 //Core.circle(mRgba, center, 5, CONTOUR_COLOR, 3);
                 //Convert back to MatOfPoint and put the new values back into the contours list
-                mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);
-                
-                if (center.y < 40) {
-            		Log.d("Mine", "LEFT: Point: X: " + center.x + " Y: " + center.y);
-            		mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
-                    mp.setVolume(volume, volume);
-            	    mp.start();
-            	    stateText.setText(R.string.RIGHT);
-                }
-            	if (center.y > 300) {
-            		Log.d("Mine", "RIGHT: Point: X: " + center.x + " Y: " + center.y);
-            		mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
-                    mp.setVolume(volume, volume);
-            	    mp.start();
-            	    stateText.setText(R.string.LEFT);
-            	}
-            	if (checkDistance(radius[0]) < 0) {
-            		mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
-                    mp.setVolume(volume, volume);
-            	    mp.start();
-            	    stateText.setText(R.string.FORWARD);
-            	}
-            	if (checkDistance(radius[0]) > 0) {
-            		mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
-                    mp.setVolume(volume, volume);
-            	    mp.start();
-            	    stateText.setText(R.string.BACK);
-            	}
+
+                mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);                
             	
                 Log.d("Mine", "Radius Status" + checkDistance(radius[0]));
                 Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
@@ -279,15 +255,53 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             }
 
             
-            for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
+            for(int i=0; i < contours.size(); i++) {
+            	Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
+            }
+            
+            for(int i=0; i < contours.size() - 1 && contours.size() > 1; i++) {
+            	
             	for(int j=i+1; j < contours.size(); j++) {
             		if(circle[i].equals(circle[j])) {
-            			Log.d("FOUND", "i" + i + " j:" + j);
+            			found = true;
+            			Log.d("FOUNDMATCH", "i" + i + " j:" + j);
             			myCircle = circle[i];
             			//Log.d("Mine", "Center: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
                         //Log.d("Mine", "Radius: " + myCircle.mRadius);
             		}
             	}
+            }
+            
+            if(!found) 
+            	return mRgba;
+           
+            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
+            
+            if (myCircle.mCenter.y < 40) {
+                Log.d("Mine", "LEFT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+                mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
+                mp.setVolume(volume, volume);
+                mp.start();
+                stateText.setText(R.string.RIGHT);
+            }
+            if (myCircle.mCenter.y > 300) {
+                Log.d("Mine", "RIGHT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+                mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
+                mp.setVolume(volume, volume);
+                mp.start();
+                stateText.setText(R.string.LEFT);
+            }
+            if (checkDistance(myCircle.mRadius) < 0) {
+                mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
+                mp.setVolume(volume, volume);
+                mp.start();
+                stateText.setText(R.string.FORWARD);
+            }
+            if (checkDistance(myCircle.mRadius) > 0) {
+                mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
+                mp.setVolume(volume, volume);
+                mp.start();
+                stateText.setText(R.string.BACK);
             }
 
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
@@ -300,7 +314,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         }
 
         return mRgba;
-        
     }
     
     private int checkDistance(float radius) {
