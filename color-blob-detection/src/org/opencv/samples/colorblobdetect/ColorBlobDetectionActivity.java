@@ -209,7 +209,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         double threshold = 120;
         Point leftBound = new Point(threshold, 0); //30 from left edge of view, with current #s
         Point rightBound = new Point(0, 0); //30 from right edge of view, with current #s
-
+        boolean found = false;
       
         if (mIsColorSelected) {
             mRgba = mDetector.process(mRgba);
@@ -238,33 +238,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 Imgproc.minEnclosingCircle(mMOP2f2, center, radius);
                 circle[i] = new Circle(center, radius[0]);
                 Log.d("FOUND", "Circle: " + i + "X: " + center.x + "Y: " + center.y);
-                if(points.length == 3 || points.length == 4)
+                if(points.length > 6)
                 	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
                 //Core.circle(mRgba, center, 5, CONTOUR_COLOR, 3);
                 //Convert back to MatOfPoint and put the new values back into the contours list
-                mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);
-                if (center.y < 40) {
-            		Log.d("Mine", "LEFT: Point: X: " + center.x + " Y: " + center.y);
-            		//mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
-                    //mp.setVolume(volume, volume);
-            	    //mp.start();
-                }
-            	if (center.y > 300) {
-            		Log.d("Mine", "RIGHT: Point: X: " + center.x + " Y: " + center.y);
-            		//mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
-                    //mp.setVolume(volume, volume);
-            	    //mp.start();
-            	}
-            	if (checkDistance(radius[0]) < 0) {
-            		/*mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
-                    mp.setVolume(volume, volume);
-            	    mp.start();*/
-            	}
-            	if (checkDistance(radius[0]) > 0) {
-            		/*mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
-                    mp.setVolume(volume, volume);
-            	    //mp.start();*/
-            	}
+                mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);                
             	
                 Log.d("Mine", "Radius Status" + checkDistance(radius[0]));
                 Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
@@ -316,6 +294,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	
             	for(int j=i+1; j < contours.size(); j++) {
             		if(circle[i].equals(circle[j])) {
+            			found = true;
             			Log.d("FOUNDMATCH", "i" + i + " j:" + j);
             			myCircle = circle[i];
             			//Log.d("Mine", "Center: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
@@ -323,6 +302,35 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             		}
             	}
             }
+            
+            if(!found) 
+            	return mRgba;
+           
+            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
+            
+            if (myCircle.mCenter.y < 40) {
+        		Log.d("Mine", "LEFT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+        		//mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
+                //mp.setVolume(volume, volume);
+        	    //mp.start();
+            }
+        	if (myCircle.mCenter.y > 300) {
+        		Log.d("Mine", "RIGHT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+        		//mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
+                //mp.setVolume(volume, volume);
+        	    //mp.start();
+        	}
+        	if (checkDistance(myCircle.mRadius) < 0) {
+        		/*mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
+                mp.setVolume(volume, volume);
+        	    mp.start();*/
+        	}
+        	if (checkDistance(myCircle.mRadius) > 0) {
+        		/*mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
+                mp.setVolume(volume, volume);
+        	    //mp.start();*/
+        	}
+            
 
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
