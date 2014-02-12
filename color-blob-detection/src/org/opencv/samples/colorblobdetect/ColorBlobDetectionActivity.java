@@ -246,21 +246,18 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
                 //Core.circle(mRgba, center, 5, CONTOUR_COLOR, 3);
                 //Convert back to MatOfPoint and put the new values back into the contours list
-
                 mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);                
             	
                 Log.d("Mine", "Radius Status" + checkDistance(radius[0]));
                 Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
                 Log.d("Center", "Radius: " + radius[0]);
             }
-
             
             for(int i=0; i < contours.size(); i++) {
             	Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
             }
             
-            for(int i=0; i < contours.size() - 1 && contours.size() > 1; i++) {
-            	
+            for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
             	for(int j=i+1; j < contours.size(); j++) {
             		if(circle[i].equals(circle[j])) {
             			found = true;
