@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">Untethered Running</string>
     <string name="NOT_TRACKING">NOT TRACKING</string>
+    <string name="TRACKING">TRACKING</string>
     <string name="RIGHT">RIGHT</string>
     <string name="LEFT">LEFT</string>
     <string name="FORWARD">BACK</string>
