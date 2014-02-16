@@ -67,7 +67,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	 BACKDIR = 3;
     private static final int	 DANGERDIR = 4;
 
-    private static final int	 NUM_STATES_AVGED = 5;
+    private static final int	 NUM_STATES_AVGED = 10;
     
     //left-right state count across frames
     private int[] 				 savedStatesLR = {-1, -1, -1};
@@ -116,6 +116,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         
         stateText = (TextView) findViewById(R.id.stateText);
         stateText.setText(R.string.NOT_TRACKING);
+        mp = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
+		mp.setVolume(volume, volume);
+        mp.start();
+        
+        
     }
 
     @Override
@@ -124,6 +129,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        mp = MediaPlayer.create(getApplicationContext(), R.raw.tracking_stopped);
+		mp.setVolume(volume, volume);
+        mp.start();
     }
 
     @Override
@@ -131,6 +139,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
+        mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
+		mp.setVolume(volume, volume);
+        mp.start();
     }
 
     public void onDestroy() {
@@ -202,6 +213,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         touchedRegionHsv.release();
         
         stateText.setText(R.string.TRACKING);
+        mp = MediaPlayer.create(getApplicationContext(), R.raw.app_started);
+		mp.setVolume(volume, volume);
+        mp.start();
 
         return false; // don't need subsequent touch events
     }
@@ -237,16 +251,18 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mMOP2f1 = new MatOfPoint2f();
         mMOP2f2 = new MatOfPoint2f();
  
-        double threshold = 120;
-        Point leftBound = new Point(threshold, 0); //30 from left edge of view, with current #s
-        Point rightBound = new Point(0, 0); //30 from right edge of view, with current #s
+  //      double threshold = 120;
+//        Point leftBound = new Point(threshold, 0); //30 from left edge of view, with current #s
+//        Point rightBound = new Point(0, 0); //30 from right edge of view, with current #s
         boolean found = false;
         int dirState = -1;
       
         if (mIsColorSelected) {
             mRgba = mDetector.process(mRgba);
-            if(false)
-            	return binaryImg;
+            
+            //if(false)
+            //	return binaryImg;
+            
             List<MatOfPoint> contours = mDetector.getContours();
             Circle[] circle = new Circle[contours.size()];
             Circle myCircle = new Circle();
@@ -360,6 +376,14 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             
             if (this.dirStateCount >= NUM_STATES_AVGED) {
             	dirState = getDirState();
+            	savedStatesLR[0] = -1;
+            	savedStatesLR[1] = -1;
+            	savedStatesLR[2] = -1;
+            	
+            	savedStatesFB[0] = -1;
+            	savedStatesFB[1] = -1;
+            	savedStatesFB[2] = -1;
+            	
             	this.dirStateCount = 0;
             	this.dangerStateCount = 0;
             }
@@ -401,36 +425,47 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	
     	// if danger is the majority of 5 frames
     	if(dangerStateCount >= NUM_STATES_AVGED / 2) {
-    		//mp = MediaPlayer.create(getApplicationContext(), R.raw.danger);
+    		mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
     		retVal = DANGERDIR;
     	}
     	//if LR has less okays, output left or right
     	if(this.savedStatesLR[OKAY] < this.savedStatesFB[OKAY]) {
     		if(this.savedStatesLR[LEFT] > this.savedStatesLR[RIGHT]) {
     			//Log.d("Mine", "LEFT: Point: X: " + center.x + " Y: " + center.y);
-        		//mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
+        		mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
+    			mp.setVolume(volume, volume);
+                mp.start();
     			retVal = LEFTDIR;
     		}
     		else if (this.savedStatesLR[LEFT] < this.savedStatesLR[RIGHT]) {
     			//Log.d("Mine", "RIGHT: Point: X: " + center.x + " Y: " + center.y);
-        		//mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
+        		mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
+    			mp.setVolume(volume, volume);
+                mp.start();
     			retVal = RIGHTDIR;
     		}
     	}
     	//else if LR has more okays, output front or back
     	else if(this.savedStatesLR[OKAY] > this.savedStatesFB[OKAY]) {
     		if(this.savedStatesFB[FRONT] > this.savedStatesFB[BACK]) {
-    			//mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
+    			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
+    			mp.setVolume(volume, volume);
+                mp.start();
     			retVal = FRONTDIR;
     		}
     		else if (this.savedStatesFB[FRONT] < this.savedStatesFB[BACK]) {
-    			//mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
+    			mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
+    			mp.setVolume(volume, volume);
+                mp.start();
     			retVal = BACKDIR;
     		}
     	}
     	//if LR and FB have equal amounts of okays, just output okay
     	else {
     		retVal = OKAY;	
+    		mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
+    		mp.setVolume(volume, volume);
+            mp.start();
     	}
         //mp.setVolume(volume, volume);
     	//mp.start();
