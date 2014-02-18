@@ -316,7 +316,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 Log.d("FOUND", "Circle: " + i + "X: " + center.x + "Y: " + center.y);
                 if(points.length > 6) {
                 	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
+                	Log.d("FOUNDMATCH", "OK");
                 	found = true;
+                	this.safeStateFlag = 1;
                 
                 }
                 //Core.circle(mRgba, center, 5, CONTOUR_COLOR, 3);
@@ -333,7 +335,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
             }
 
-            for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
+           /* for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
             	for(int j=i+1; j < contours.size(); j++) {
             		if(circle[i].equals(circle[j])) {
             			Log.d("FOUNDMATCH", "i" + i + " j:" + j);
@@ -343,7 +345,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             			//Log.d("Mine", "Radius: " + myCircle.mRadius);
             		}
             	}
-            }
+            }*/
             
             if(this.safeStateFlag == 1) {
 	
@@ -364,6 +366,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
 	        		mp.setVolume(volume, volume);
 	                mp.start();
+	                mLost = false;
 	            }
 	            
 	            // used for average code
@@ -403,20 +406,23 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	this.dangerStateCount++; // if no valid circle found, increment danger state
             	
             	// new threshold code
-            	mLost = true;
-            	if (mPrevLocation == LEFTDIR) {
-            		//stateText.setText("LEFT");
-                    //mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
-                    //mp.setVolume(volume, volume);
-                    //mp.start();
-            	}
-            	else if (mPrevLocation == RIGHTDIR) {
-            		//stateText.setText("RIGHT");
-                    //mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
-                    //mp.setVolume(volume, volume);
-                    //mp.start();
-            	}
-            	mPrevLocation = NODIR;
+            	if(!mLost){
+            		
+	            	if (mPrevLocation == LEFTDIR) {
+	            		//stateText.setText("LEFT");
+	                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
+	                    mp.setVolume(volume, volume);
+	                    mp.start();
+	            	}
+	            	else if (mPrevLocation == RIGHTDIR) {
+	            		//stateText.setText("RIGHT");
+	                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
+	                    mp.setVolume(volume, volume);
+	                    mp.start();
+	            	}
+	            	mPrevLocation = NODIR;
+	            	mLost = true;
+	            }
             }
             
             this.safeStateFlag = 0;
@@ -480,31 +486,31 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	if(this.savedStatesLR[OKAY] < this.savedStatesFB[OKAY]) {
     		if(this.savedStatesLR[LEFT] > this.savedStatesLR[RIGHT]) {
     			//Log.d("Mine", "LEFT: Point: X: " + center.x + " Y: " + center.y);
-        		mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
-    			mp.setVolume(volume, volume);
-                mp.start();
+        		//mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
+    		//	mp.setVolume(volume, volume);
+              //  mp.start();
     			retVal = LEFTDIR;
     		}
     		else if (this.savedStatesLR[LEFT] < this.savedStatesLR[RIGHT]) {
     			//Log.d("Mine", "RIGHT: Point: X: " + center.x + " Y: " + center.y);
-        		mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
-    			mp.setVolume(volume, volume);
-                mp.start();
+        	//	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
+    		//	mp.setVolume(volume, volume);
+             //   mp.start();
     			retVal = RIGHTDIR;
     		}
     	}
     	//else if LR has more okays, output front or back
     	else if(this.savedStatesLR[OKAY] > this.savedStatesFB[OKAY]) {
     		if(this.savedStatesFB[FRONT] > this.savedStatesFB[BACK]) {
-    			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
-    			mp.setVolume(volume, volume);
-                mp.start();
+    			//mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
+    			//mp.setVolume(volume, volume);
+                //mp.start();
     			retVal = FRONTDIR;
     		}
     		else if (this.savedStatesFB[FRONT] < this.savedStatesFB[BACK]) {
-    			mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
-    			mp.setVolume(volume, volume);
-                mp.start();
+    			//mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
+    			//mp.setVolume(volume, volume);
+                //mp.start();
     			retVal = BACKDIR;
     		}
     	}
