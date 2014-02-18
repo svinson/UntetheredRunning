@@ -19,11 +19,13 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
@@ -36,6 +38,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final String  TAG              = "OCVSample::Activity";
 
     private boolean              mIsColorSelected = false;
+    private boolean 			 appHasStarted = false;
     private Mat                  mRgba;
     private Mat                  binaryImg;
     private Scalar               mBlobColorRgba;
@@ -113,6 +116,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
         setContentView(R.layout.color_blob_detection_surface_view);
 
+        startStopBtn = (Button) findViewById(R.id.buttonStartStop);
+        startStopBtn.setText(R.string.START_APP_STRING);
+        
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
         //mOpenCvCameraView.setMaxFrameSize(320, 240);
@@ -169,15 +175,26 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
 
     public void startStopAppOnClick(View view) {
-    	//check button label?
-    	//update button label
-    	//start/stop tracking
+    	if((startStopBtn.getText().toString()).equals(getResources().getString(R.string.START_APP_STRING))) {
+    		startStopBtn.setText(R.string.STOP_APP_STRING);
+    		mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
+    		appHasStarted = true;
+            mp.setVolume(volume, volume);  
+            mp.start();
+      	}
+    	else {
+    		startStopBtn.setText(R.string.START_APP_STRING);
+    		mp = MediaPlayer.create(getApplicationContext(), R.raw.tracking_stopped);
+    		appHasStarted = false;
+    		mp.setVolume(volume, volume);  
+            mp.start();
+    	}
     }
     
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
-
+        if(mIsColorSelected == false){
         int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
         int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
 
@@ -222,9 +239,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         touchedRegionHsv.release();
         
         stateText.setText(R.string.TRACKING);
-        mp = MediaPlayer.create(getApplicationContext(), R.raw.app_started);
-		mp.setVolume(volume, volume);
-        mp.start();
+        appHasStarted = true;
+        }
 
         return false; // don't need subsequent touch events
     }
@@ -266,7 +282,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         boolean found = false;
         int dirState = -1;
       
-        if (mIsColorSelected) {
+        if (mIsColorSelected && appHasStarted == true) {
             mRgba = mDetector.process(mRgba);
             
             //if(false)
