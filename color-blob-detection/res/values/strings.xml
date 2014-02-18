@@ -7,4 +7,6 @@
     <string name="LEFT">LEFT</string>
     <string name="FORWARD">BACK</string>
     <string name="BACK">BACK</string>
+    <string name="START_APP_STRING">Start</string>
+    <string name="STOP_APP_STRING">Stop</string>
 </resources>

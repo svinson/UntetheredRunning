@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 
 
@@ -43,7 +44,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
+    
     private TextView             stateText;
+    private Button               startStopBtn;
 
     private float 				 volume = 0.3f;
     private MediaPlayer			 mp;
@@ -165,6 +168,12 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mRgba.release();
     }
 
+    public void startStopAppOnClick(View view) {
+    	//check button label?
+    	//update button label
+    	//start/stop tracking
+    }
+    
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
