@@ -47,6 +47,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
+    private int                  mPrevLocation = NODIR;
+    private int					 mthreshold;
+    private boolean              mLost = false;
     
     private TextView             stateText;
     private Button               startStopBtn;
@@ -67,6 +70,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int 	 OKAY = 2;
 
     // directional constants for dirState returned by getDirState()
+    private static final int     NODIR = -1;
     private static final int	 LEFTDIR = 0;
     private static final int	 RIGHTDIR = 1;
     private static final int	 FRONTDIR = 2;
@@ -80,7 +84,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     //forward-back state count across frames
     private int[]				 savedStatesFB = {-1, -1, -1};
     
-    private int				 dirStateCount = 0;	// count for dirStates before avged 
+    private int				  dirStateCount = 0;	// count for dirStates before avged 
     private int				  safeStateFlag = 0;	// set flag if valid circle found
     private int				  dangerStateCount = 0;	// increment if no valid circle found in a frame
 
@@ -128,8 +132,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mp = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
 		mp.setVolume(volume, volume);
         mp.start();
-        
-        
     }
 
     @Override
@@ -334,7 +336,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
             	for(int j=i+1; j < contours.size(); j++) {
             		if(circle[i].equals(circle[j])) {
-            			//found = true;
             			Log.d("FOUNDMATCH", "i" + i + " j:" + j);
             			myCircle = circle[i];
             			this.safeStateFlag = 1; // valid circle found so set flag
@@ -344,56 +345,78 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	}
             }
             
-            if(!found) {
-            	return mRgba;
+            if(this.safeStateFlag == 1) {
+	
+	            /* Log.d("Mine", "TEST: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+	            // only necessary for testing */
+	           
+	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
+	            
+	            // used for new threshold code
+	            if (myCircle.mCenter.x < 400) { // change 400 to mThreshold
+	            	mPrevLocation = LEFTDIR;
+	            }
+	            else {
+	            	mPrevLocation = RIGHTDIR;
+	            }
+	            
+	            if (mLost) {
+	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
+	        		mp.setVolume(volume, volume);
+	                mp.start();
+	            }
+	            
+	            // used for average code
+	            if (myCircle.mCenter.x < 40) {
+	                Log.d("Mine", "LEFT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+	                this.savedStatesLR[LEFT]++;
+	            }
+	            else if (myCircle.mCenter.x > 300) {
+	                Log.d("Mine", "RIGHT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+	                this.savedStatesLR[RIGHT]++;
+	            }
+	            else {
+	            	this.savedStatesLR[OKAY]++;
+	            }
+	            
+	            if (checkDistance(myCircle.mRadius) < 0) {
+	                //mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
+	                //mp.setVolume(volume, volume);
+	                //mp.start();
+	                //stateText.setText("FORWARD");
+	            	this.savedStatesFB[FRONT]++;
+	            }
+	            else if (checkDistance(myCircle.mRadius) > 0) {
+	                //mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
+	                //mp.setVolume(volume, volume);
+	                //mp.start();
+	                //stateText.setText("BACK");
+	            	this.savedStatesFB[BACK]++;
+	            }
+	            else {
+	            	this.savedStatesFB[OKAY]++;
+	            }
             }
-            else if(myCircle.mRadius > 20) {
-            	Log.d("Mine", "TEST: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-            }
-           
-            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
             
-            if (myCircle.mCenter.y < 40) {
-                Log.d("Mine", "LEFT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-                //stateText.setText("RIGHT");
-                //mp = MediaPlayer.create(getApplicationContext(), R.raw.rightbuzz);
-                //mp.setVolume(volume, volume);
-                //mp.start();
-                this.savedStatesLR[LEFT]++;
-            }
-            else if (myCircle.mCenter.y > 300) {
-                Log.d("Mine", "RIGHT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-                //stateText.setText("LEFT");
-                //mp = MediaPlayer.create(getApplicationContext(), R.raw.leftbuzz);
-                //mp.setVolume(volume, volume);
-                //mp.start();
-                this.savedStatesLR[RIGHT]++;
-            }
+            
             else {
-            	this.savedStatesLR[OKAY]++;
-            }
-            
-            if (checkDistance(myCircle.mRadius) < 0) {
-                //mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
-                //mp.setVolume(volume, volume);
-                //mp.start();
-                //stateText.setText("FORWARD");
-            	this.savedStatesFB[FRONT]++;
-            }
-            else if (checkDistance(myCircle.mRadius) > 0) {
-                //mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
-                //mp.setVolume(volume, volume);
-                //mp.start();
-                //stateText.setText("BACK");
-            	this.savedStatesFB[BACK]++;
-            }
-            else {
-            	this.savedStatesFB[OKAY]++;
-            }
-            
-            // if no valid circle found, increment danger state
-            if (this.safeStateFlag == 0) {
-            	this.dangerStateCount++;
+            	this.dangerStateCount++; // if no valid circle found, increment danger state
+            	
+            	// new threshold code
+            	mLost = true;
+            	if (mPrevLocation == LEFTDIR) {
+            		//stateText.setText("LEFT");
+                    //mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
+                    //mp.setVolume(volume, volume);
+                    //mp.start();
+            	}
+            	else if (mPrevLocation == RIGHTDIR) {
+            		//stateText.setText("RIGHT");
+                    //mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
+                    //mp.setVolume(volume, volume);
+                    //mp.start();
+            	}
+            	mPrevLocation = NODIR;
             }
             
             this.safeStateFlag = 0;
