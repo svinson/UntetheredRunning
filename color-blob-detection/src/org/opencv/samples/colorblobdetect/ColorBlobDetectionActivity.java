@@ -48,7 +48,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
     private int                  mPrevLocation = NODIR;
-    private int					 mthreshold;
+    private int					 mThreshold;
     private boolean              mLost = false;
     
     private TextView             stateText;
@@ -360,7 +360,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	mPrevLocation = RIGHTDIR;
 	            }
 	            
-	            if (mLost) {
+	            if (mLost && myCircle.mCenter.x > 200 && myCircle.mCenter.x < 600) {
 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
 	        		mp.setVolume(volume, volume);
 	                mp.start();
@@ -511,9 +511,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	//if LR and FB have equal amounts of okays, just output okay
     	else {
     		retVal = OKAY;	
-    		mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
-    		mp.setVolume(volume, volume);
-            mp.start();
+    		//mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
+    		//mp.setVolume(volume, volume);
+            //mp.start();
     	}
         //mp.setVolume(volume, volume);
     	//mp.start();
