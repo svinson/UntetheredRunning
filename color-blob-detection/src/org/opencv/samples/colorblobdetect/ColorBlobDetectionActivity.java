@@ -39,6 +39,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     private boolean              mIsColorSelected = false;
     private boolean 			 appHasStarted = false;
+    
+    private boolean 			 badDistance = false;
+    
     private Mat                  mRgba;
     private Mat                  binaryImg;
     private Scalar               mBlobColorRgba;
@@ -423,6 +426,27 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	mPrevLocation = NODIR;
 	            	mLost = true;
 	            }
+            	
+            	if(!badDistance){
+            		if(myCircle.mRadius > 8){ //Change to correct high threshold
+            			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
+	                    mp.setVolume(volume, volume);
+	                    mp.start();
+	                    badDistance = true;
+            		}
+            		else if(myCircle.mRadius < 2){ //Change to correct low threshold
+        				mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
+        				mp.setVolume(volume, volume);
+        				mp.start();
+        				badDistance = true;
+            		}
+            	}
+            	if(badDistance && myCircle.mRadius < 6 && myCircle.mRadius > 4){
+    				mp = MediaPlayer.create(getApplicationContext(), R.raw.good_distance);
+    				mp.setVolume(volume, volume);
+    				mp.start();
+            		badDistance = false;
+            	}
             }
             
             this.safeStateFlag = 0;
