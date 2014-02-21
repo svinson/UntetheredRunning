@@ -57,7 +57,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private TextView             stateText;
     private Button               startStopBtn;
 
-    private float 				 volume = 0.3f;
+    private float 				 volume = 1.0f;
     private MediaPlayer			 mp;
     
     private MatOfPoint2f mMOP2f1; 
@@ -457,30 +457,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	mLost = true;
             	}
             	
-            	/*if(!badDistance){
-            		Log.d("RADIUSCALC", "IN HERE");
-            		if(myCircle.mRadius > 65){ //Change to correct high threshold
-            			Log.d("RADIUSCALC", "SLOW DOwn");
-            			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
-	                    mp.setVolume(volume, volume);
-	                    mp.start();
-	                    badDistance = true;
-            		}
-            		else if(myCircle.mRadius < 30){ //Change to correct low threshold
-            			Log.d("RADIUSCALC", "Speed up");
-        				mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
-        				mp.setVolume(volume, volume);
-        				mp.start();
-        				badDistance = true;
-            		}
-            	}
-            	if(badDistance && myCircle.mRadius < 64 && myCircle.mRadius > 31){
-            		Log.d("RADIUSCALC", "Good position");
-    				mp = MediaPlayer.create(getApplicationContext(), R.raw.good_distance);
-    				mp.setVolume(volume, volume);
-    				mp.start();
-            		badDistance = false;
-            	}*/
             }
             
             this.safeStateFlag = 0;
@@ -539,9 +515,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	
     	// if danger is the majority of 5 frames
     	if(dangerStateCount >= NUM_STATES_AVGED / 2) {
-    		mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
-            mp.setVolume(volume, volume);
-            mp.start();
+    		//mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
+           // mp.setVolume(volume, volume);
+            //mp.start();
     		retVal = DANGERDIR;
     	}
     	//if LR has less okays, output left or right
