@@ -82,6 +82,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     private static final int	 NUM_STATES_AVGED = 10;
     
+    private static final int	 TIMER_MAX = 50;
+    private static final int	 NUM_PLAYED_MAX = 4;
+    
     //left-right state count across frames
     private int[] 				 savedStatesLR = {-1, -1, -1};
     //forward-back state count across frames
@@ -91,6 +94,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private int				  safeStateFlag = 0;	// set flag if valid circle found
     private int				  dangerStateCount = 0;	// increment if no valid circle found in a frame
 
+    private int					dirTimer = 0;
+    private int					dirsPlayedLR = 0;
+    
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -290,6 +296,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         if (mIsColorSelected && appHasStarted == true) {
             mRgba = mDetector.process(mRgba);
             
+            this.dirTimer++;
+            
             //if(false)
             //	return binaryImg;
             
@@ -373,6 +381,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	        		mp.setVolume(volume, volume);
 	                mp.start();
 	                mLost = false;
+	                this.dirTimer = 0;
 	            }
 	            
 	            // used for average code
@@ -406,54 +415,62 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	this.savedStatesFB[OKAY]++;
 	            }
             
-	            if(!badDistance){
+	            if(!badDistance || this.dirTimer == TIMER_MAX){
             		Log.d("RADIUSCALC", "IN HERE");
-            		if(myCircle.mRadius > 65){ //Change to correct high threshold
+            		if(myCircle.mRadius > 65 || (myCircle.mRadius >= 55 && badDistance == true)){ //Change to correct high threshold
             			Log.d("RADIUSCALC", "SLOW DOwn");
             			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
 	                    mp.setVolume(volume, volume);
 	                    mp.start();
 	                    badDistance = true;
+	                    this.dirTimer = 0;
             		}
-            		else if(myCircle.mRadius < 35){ //Change to correct low threshold
+            		else if(myCircle.mRadius < 35 || (myCircle.mRadius <= 44 && badDistance == true)){ //Change to correct low threshold
             			Log.d("RADIUSCALC", "Speed up");
         				mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
         				mp.setVolume(volume, volume);
         				mp.start();
         				badDistance = true;
+        				this.dirTimer = 0;
             		}
             	}
-            	if(badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44){
+            	if((badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44) || this.dirTimer == TIMER_MAX){
             		Log.d("RADIUSCALC", "Good position");
     				mp = MediaPlayer.create(getApplicationContext(), R.raw.good_distance);
     				mp.setVolume(volume, volume);
     				mp.start();
             		badDistance = false;
+            		this.dirTimer = 0;
             	}
-            
-            
             }
-            
             
             else {
             	this.dangerStateCount++; // if no valid circle found, increment danger state
             	Log.d("DANGERCOUNT", "Danger state count is " + this.dangerStateCount);
             	// new threshold code
-            	if(!mLost){
+            	if(!mLost || this.dirTimer == TIMER_MAX){
             		
 	            	if (mPrevLocation == LEFTDIR) {
 	            		//stateText.setText("LEFT");
 	                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
 	                    mp.setVolume(volume, volume);
 	                    mp.start();
+	                    this.dirTimer = 0;
+	                    this.dirsPlayedLR++;
 	            	}
 	            	else if (mPrevLocation == RIGHTDIR) {
 	            		//stateText.setText("RIGHT");
 	                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
 	                    mp.setVolume(volume, volume);
 	                    mp.start();
+	                    this.dirTimer = 0;
+	                    this.dirsPlayedLR++;
 	            	}
-	            	mPrevLocation = NODIR;
+	            	
+	            	if (this.dirsPlayedLR >= NUM_PLAYED_MAX) {
+	            		mPrevLocation = NODIR;
+	            		this.dirsPlayedLR = 0;
+	            	}
 	            	mLost = true;
             	}
             	
@@ -462,10 +479,16 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             this.safeStateFlag = 0;
             this.dirStateCount++;
             
-            
+            if (mPrevLocation == NODIR && this.dirTimer == TIMER_MAX) {
+            	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
+                mp.setVolume(volume, volume);
+                mp.start();
+                this.dirTimer = 0;
+            }
             
             if (this.dirStateCount >= NUM_STATES_AVGED) {
-            	dirState = getDirState();
+            	//dirState = getDirState();
+            	
             	savedStatesLR[0] = -1;
             	savedStatesLR[1] = -1;
             	savedStatesLR[2] = -1;
