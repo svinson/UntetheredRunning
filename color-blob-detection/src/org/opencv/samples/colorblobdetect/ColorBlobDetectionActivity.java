@@ -91,7 +91,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private int[]				 savedStatesFB = {-1, -1, -1};
     
     private int				  dirStateCount = 0;	// count for dirStates before avged 
-    private int				  safeStateFlag = 0;	// set flag if valid circle found
+    private boolean			  safeStateFlag = false;	// set flag if valid circle found
     private int				  dangerStateCount = 0;	// increment if no valid circle found in a frame
 
     private int					dirTimer = 0;
@@ -307,7 +307,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
            // Log.e(TAG, "Contours count: " + contours.size());
             Point center; 
             float[] radius; 
-            for(int i=0;i<contours.size();i++) {
+            for(int i=0;i<contours.size() && !this.safeStateFlag;i++) {
 				//Convert contours(i) from MatOfPoint to MatOfPoint2f
                 contours.get(i).convertTo(mMOP2f1, CvType.CV_32FC2);
 				//Processing on mMOP2f1 which is in type MatOfPoint2f
@@ -326,13 +326,14 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 myCircle = new Circle(center, radius[0]);
                 //Log.d("FOUND", "Circle: " + i + "X: " + center.x + "Y: " + center.y);
                 //Log.d("RADIUSCALC", "With Radius: " + i + "X: " + myCircle.mRadius);// + "Y: " + center.y);
-                if(points.length > 6) {
+                if(points.length > 6 && myCircle.mRadius > 22 && myCircle.mRadius < 60) {
+                	
                 	Log.d("RADIUSCALC", "With Radius: " + i + "X: " + myCircle.mRadius);// + "Y: " + center.y);
                 	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
                 	//add radius check
                 	Log.d("FOUNDMATCH", "OK");
                 	found = true;
-                	this.safeStateFlag = 1;
+                	this.safeStateFlag = true;
                 
                 }
                 //Core.circle(mRgba, center, 5, CONTOUR_COLOR, 3);
@@ -361,7 +362,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	}
             }*/
             
-            if(this.safeStateFlag == 1) {
+            if(this.safeStateFlag == true) {
 	
 	            /* Log.d("Mine", "TEST: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
 	            // only necessary for testing */
@@ -476,7 +477,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	
             }
             
-            this.safeStateFlag = 0;
+            this.safeStateFlag = false;
             this.dirStateCount++;
             
             if (mPrevLocation == NODIR && this.dirTimer == TIMER_MAX) {
