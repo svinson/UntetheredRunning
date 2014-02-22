@@ -97,6 +97,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private int					dirTimer = 0;
     private int					dirsPlayedLR = 0;
     
+    private static final int	MIN_RADIUS = 22;
+    private static final int	MAX_RADIUS = 60;
+    
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -290,16 +293,12 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
   //      double threshold = 120;
 //        Point leftBound = new Point(threshold, 0); //30 from left edge of view, with current #s
 //        Point rightBound = new Point(0, 0); //30 from right edge of view, with current #s
-        boolean found = false;
         int dirState = -1;
       
         if (mIsColorSelected && appHasStarted == true) {
             mRgba = mDetector.process(mRgba);
             
             this.dirTimer++;
-            
-            //if(false)
-            //	return binaryImg;
             
             List<MatOfPoint> contours = mDetector.getContours();
             Circle[] circle = new Circle[contours.size()];
@@ -314,36 +313,27 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 Imgproc.approxPolyDP(mMOP2f1, mMOP2f2, Imgproc.arcLength(mMOP2f1, true) * 0.02, true);
                 Point[] points = mMOP2f2.toArray();
                 for(Point x : points) {
-                	//Log.d("Mine", "Point: X: " + x.x + " Y: " + x.y);
                 	Core.circle(mRgba, x, 5, CONTOUR_COLOR, 3);
                 }
-               // Log.d("Mine", "Channels: " + mMOP2f2.total());
-                //RotatedRect rec =  Imgproc.minAreaRect(mMOP2f2);
+
                 center = new Point();
                 radius = new float[1];
                 Imgproc.minEnclosingCircle(mMOP2f2, center, radius);
                 circle[i] = new Circle(center, radius[0]);
                 myCircle = new Circle(center, radius[0]);
-                //Log.d("FOUND", "Circle: " + i + "X: " + center.x + "Y: " + center.y);
-                //Log.d("RADIUSCALC", "With Radius: " + i + "X: " + myCircle.mRadius);// + "Y: " + center.y);
-                if(points.length > 6 && myCircle.mRadius > 22 && myCircle.mRadius < 60) {
-                	
-                	Log.d("RADIUSCALC", "With Radius: " + i + "X: " + myCircle.mRadius);// + "Y: " + center.y);
-                	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
-                	//add radius check
-                	Log.d("FOUNDMATCH", "OK");
-                	found = true;
-                	this.safeStateFlag = true;
                 
+                if(points.length > 6 && myCircle.mRadius > MIN_RADIUS && myCircle.mRadius < MAX_RADIUS) {
+                	Log.d("RADIUSCALC", "With Radius: " + i + "X: " + myCircle.mRadius);
+                	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
+                	Log.d("FOUNDMATCH", "OK");
+                	this.safeStateFlag = true;
                 }
-                //Core.circle(mRgba, center, 5, CONTOUR_COLOR, 3);
+
                 //Convert back to MatOfPoint and put the new values back into the contours list
                 mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);                
-            	
-                //Log.d("Mine", "Radius Status" + checkDistance(radius[0]));
+
                 Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
-                Log.d("Center", "Radius: " + radius[0]);
-           
+                Log.d("Center", "Radius: " + radius[0]);     
             }
             
             for(int i=0; i < contours.size(); i++) {

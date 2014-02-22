@@ -86,49 +86,20 @@ public class ColorBlobDetector {
     	Log.d("Color", "H Lower: " + mLowerBound.val[0] + "Higher: " + mUpperBound.val[0]);
     	Log.d("Color", "S Lower: " + mLowerBound.val[1] + "Higher: " + mUpperBound.val[1]);
     	Log.d("Color", "V Lower: " + mLowerBound.val[2] + "Higher: " + mUpperBound.val[2]);
-    /*	mLowerBound.val[0] = 0;
-        mUpperBound.val[0] = 10;
-
-        mLowerBound.val[1] = 100;
-        mUpperBound.val[1] = 150;
-
-        mLowerBound.val[2] = 150;
-        mUpperBound.val[2] = 255;
-
-        mLowerBound.val[3] = 0;
-        mUpperBound.val[3] = 255;*/
-    	
-    	/*mLowerBound.val[0] = 30;
-        mUpperBound.val[0] = 160;
-
-        mLowerBound.val[1] = 0;
-        mUpperBound.val[1] = 0;
-
-        mLowerBound.val[2] = 0;
-        mUpperBound.val[2] = 0;
-
-        mLowerBound.val[3] = 0;
-        mUpperBound.val[3] = 255;*/
     	
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
-        //Imgproc.blur(mPyrDownMat, mPyrDownMat, new Size(2,2));
         Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
         
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
         //Core.inRange(mHsvMat, new Scalar(225, 111, 205), new Scalar(255, 211, 205), mMask1);
-        //Core.bitwise_xor(mMask, mMask1, mMask);
-        //Core.inRange(mHsvMat, new Scalar(0,127,200), new Scalar(28, 226, 300), mMask);
         Imgproc.dilate(mMask, mDilatedMask, new Mat());
         Imgproc.pyrUp(mDilatedMask, rgbaImage);
         Imgproc.pyrUp(rgbaImage, rgbaImage);
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-        
-       
+
         Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        
-       
-        
+
         // Find max contour area
         double maxArea = 0;
         Iterator<MatOfPoint> each = contours.iterator();
