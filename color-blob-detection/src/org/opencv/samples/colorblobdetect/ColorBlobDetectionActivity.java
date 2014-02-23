@@ -199,6 +199,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	//App is already in not tracking state
     	if((startStopBtn.getText().toString()).equals(getResources().getString(R.string.START_APP_STRING))) {
     		startStopBtn.setText(R.string.STOP_APP_STRING);
+    		appHasStarted = true;
     		//App has tracked has least once
     		if(appFirstRun){
     			mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
@@ -352,7 +353,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             }
             
             for(int i=0; i < contours.size(); i++) {
-            	Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
+            	if(circle[i] != null)
+            		Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
             }
 
            /* for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
