@@ -21,3 +21,6 @@
 
 color-blob-detection/gen/org/opencv/samples/colorblobdetect/R.java
 color-blob-detection/project.properties
+color-blob-detection/bin/
+color-blob-detection/gen/
+
