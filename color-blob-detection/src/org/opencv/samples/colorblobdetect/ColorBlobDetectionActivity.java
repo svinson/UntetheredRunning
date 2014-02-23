@@ -39,6 +39,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     private boolean              mIsColorSelected = false;
     private boolean 			 appHasStarted = false;
+    private boolean				 appFirstRun = false;
     
     private boolean 			 badDistance = false;
     
@@ -152,7 +153,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-        mp = MediaPlayer.create(getApplicationContext(), R.raw.tracking_stopped);
+        mp = MediaPlayer.create(getApplicationContext(), R.raw.app_closed);
 		mp.setVolume(volume, volume);
         mp.start();
     }
@@ -162,15 +163,21 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
-        mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
-		mp.setVolume(volume, volume);
-        mp.start();
+        if(appHasStarted){
+        	mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
+        	mp.setVolume(volume, volume);
+        	mp.start();
+        }
+        //else{
+        	//appHasStarted = true;
+        //}
     }
 
     public void onDestroy() {
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        mp = null;
     }
 
     public void onCameraViewStarted(int width, int height) {
@@ -189,13 +196,21 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
 
     public void startStopAppOnClick(View view) {
+    	//App is already in not tracking state
     	if((startStopBtn.getText().toString()).equals(getResources().getString(R.string.START_APP_STRING))) {
     		startStopBtn.setText(R.string.STOP_APP_STRING);
-    		mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
-    		appHasStarted = true;
-            mp.setVolume(volume, volume);  
+    		//App has tracked has least once
+    		if(appFirstRun){
+    			mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
+    		}
+    		else{
+    			mp = MediaPlayer.create(getApplicationContext(), R.raw.app_started);
+    			appFirstRun = true;
+    		}
+    		mp.setVolume(volume, volume);  
             mp.start();
       	}
+    	//App was in running state
     	else {
     		startStopBtn.setText(R.string.START_APP_STRING);
     		mp = MediaPlayer.create(getApplicationContext(), R.raw.tracking_stopped);
