@@ -25,7 +25,6 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
@@ -81,6 +80,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	 BACKDIR = 3;
     private static final int	 DANGERDIR = 4;
 
+    //Number of states to average
     private static final int	 NUM_STATES_AVGED = 10;
     
     private static final int	 TIMER_MAX = 50;
@@ -107,7 +107,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                 {
-                   // Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
                     mOpenCvCameraView.setOnTouchListener(ColorBlobDetectionActivity.this);
                 } break;
