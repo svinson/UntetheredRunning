@@ -300,6 +300,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
     
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+    	Log.d("FrameRate", "Start");
         mRgba = inputFrame.rgba();
         binaryImg = inputFrame.gray();
         mMOP2f1 = new MatOfPoint2f();
@@ -516,7 +517,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
             mSpectrum.copyTo(spectrumLabel);
         }
-
+        Log.d("FrameRate", "Stop");
         return mRgba;
     }
     
