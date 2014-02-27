@@ -200,54 +200,60 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
-        if(mIsColorSelected == false){
-        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
-        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
-
-        int x = (int)event.getX() - xOffset;
-        int y = (int)event.getY() - yOffset;
-
-        // Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
-
-        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
-
-        Rect touchedRect = new Rect();
-
-        touchedRect.x = (x>4) ? x-4 : 0;
-        touchedRect.y = (y>4) ? y-4 : 0;
-
-        touchedRect.width = (x+4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
-        touchedRect.height = (y+4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
-
-        Mat touchedRegionRgba = mRgba.submat(touchedRect);
-
-        Mat touchedRegionHsv = new Mat();
-        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
-
-        // Calculate average color of touched region
-        mBlobColorHsv = Core.sumElems(touchedRegionHsv);
-        int pointCount = touchedRect.width*touchedRect.height;
-        for (int i = 0; i < mBlobColorHsv.val.length; i++)
-            mBlobColorHsv.val[i] /= pointCount;
-
-        mBlobColorRgba = converScalarHsv2Rgba(mBlobColorHsv);
-
-        Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
-                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
-
-        mDetector.setHsvColor(mBlobColorHsv);
-        Log.i("HSV", mBlobColorHsv.val[0] + " " + mBlobColorHsv.val[1] +
-                " " + mBlobColorHsv.val[2] + " " + mBlobColorHsv.val[3]);
-        
-        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
-
-        mIsColorSelected = true;
-
-        touchedRegionRgba.release();
-        touchedRegionHsv.release();
-        
-        stateText.setText(R.string.TRACKING);
-        appHasStarted = true;
+        if(!mIsColorSelected){
+	        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
+	        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
+	
+	        int x = (int)event.getX() - xOffset;
+	        int y = (int)event.getY() - yOffset;
+	
+	        // Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
+	
+	        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+	
+	        Rect touchedRect = new Rect();
+	
+	        touchedRect.x = (x>4) ? x-4 : 0;
+	        touchedRect.y = (y>4) ? y-4 : 0;
+	
+	        touchedRect.width = (x+4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
+	        touchedRect.height = (y+4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
+	
+	        Mat touchedRegionRgba = mRgba.submat(touchedRect);
+	
+	        Mat touchedRegionHsv = new Mat();
+	        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+	
+	        // Calculate average color of touched region
+	        mBlobColorHsv = Core.sumElems(touchedRegionHsv);
+	        int pointCount = touchedRect.width*touchedRect.height;
+	        for (int i = 0; i < mBlobColorHsv.val.length; i++)
+	            mBlobColorHsv.val[i] /= pointCount;
+	
+	        mBlobColorRgba = converScalarHsv2Rgba(mBlobColorHsv);
+	
+	        Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
+	                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
+	
+	        mDetector.setHsvColor(mBlobColorHsv);
+	        Log.i("HSV", mBlobColorHsv.val[0] + " " + mBlobColorHsv.val[1] +
+	                " " + mBlobColorHsv.val[2] + " " + mBlobColorHsv.val[3]);
+	        
+	        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+	
+	        mIsColorSelected = true;
+	
+	        touchedRegionRgba.release();
+	        touchedRegionHsv.release();
+	        
+	        stateText.setText(R.string.TRACKING);
+	        appHasStarted = true;
+	        startStopBtn.setText(R.string.STOP_APP_STRING);
+    		appHasStarted = true;
+    		appFirstRun = true;
+   			mp = MediaPlayer.create(getApplicationContext(), R.raw.app_started);
+    		mp.setVolume(volume, volume);  
+            mp.start();
         }
 
         return false; // don't need subsequent touch events
@@ -335,6 +341,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            }
 	            
 	            if (mLost && myCircle.mCenter.x > 200 && myCircle.mCenter.x < 600) {
+	            	//stateText.setText("GOOD");
 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
 	        		mp.setVolume(volume, volume);
 	                mp.start();
@@ -344,9 +351,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            }
             
 	            if(!badDistance || this.dirTimer == TIMER_MAX){
-            		Log.d("RADIUSCALC", "IN HERE");
             		if(myCircle.mRadius > 65 || (myCircle.mRadius >= 55 && badDistance == true)){ //Change to correct high threshold
-            			Log.d("RADIUSCALC", "SLOW DOwn");
             			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
 	                    mp.setVolume(volume, volume);
 	                    mp.start();
@@ -354,7 +359,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	                    this.dirTimer = 0;
             		}
             		else if(myCircle.mRadius < 35 || (myCircle.mRadius <= 44 && badDistance == true)){ //Change to correct low threshold
-            			Log.d("RADIUSCALC", "Speed up");
         				mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
         				mp.setVolume(volume, volume);
         				mp.start();
@@ -363,7 +367,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             		}
             	}
             	if((badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44) || this.dirTimer == TIMER_MAX){
-            		Log.d("RADIUSCALC", "Good position");
+            		//stateText.setText("GOOD");
     				mp = MediaPlayer.create(getApplicationContext(), R.raw.good_distance);
     				mp.setVolume(volume, volume);
     				mp.start();
@@ -406,6 +410,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             this.safeStateFlag = false;
             
             if (mPrevLocation == NODIR && this.dirTimer == TIMER_MAX) {
+            	//stateText.setText("LOST");
             	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
                 mp.setVolume(volume, volume);
                 mp.start();
