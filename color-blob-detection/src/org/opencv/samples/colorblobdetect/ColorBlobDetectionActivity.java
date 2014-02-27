@@ -19,10 +19,10 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,7 +43,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private boolean 			 badDistance = false;
     
     private Mat                  mRgba;
-    private Mat                  binaryImg;
+    //private Mat                  binaryImg;
     private Scalar               mBlobColorRgba;
     private Scalar               mBlobColorHsv;
     private ColorBlobDetector    mDetector;
@@ -51,7 +51,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
     private int                  mPrevLocation = NODIR;
-    private int					 mThreshold;
+    private int					 mThreshold = 400; // should change to a dynamic value
     private boolean              mLost = false;
     
     private TextView             stateText;
@@ -64,36 +64,19 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private MatOfPoint2f mMOP2f2;
     
     private CameraBridgeViewBase mOpenCvCameraView;
-    
-    // index constants for int savesStatesLR[3] and int savedStateFB[3]
-    private static final int	 LEFT = 0;
-    private static final int	 RIGHT = 1;
-    private static final int	 FRONT = 0;
-    private static final int	 BACK = 1;
-    private static final int 	 OKAY = 2;
 
-    // directional constants for dirState returned by getDirState()
+    // directional constants
     private static final int     NODIR = -1;
     private static final int	 LEFTDIR = 0;
     private static final int	 RIGHTDIR = 1;
     private static final int	 FRONTDIR = 2;
     private static final int	 BACKDIR = 3;
     private static final int	 DANGERDIR = 4;
-
-    //Number of states to average
-    private static final int	 NUM_STATES_AVGED = 10;
     
     private static final int	 TIMER_MAX = 50;
     private static final int	 NUM_PLAYED_MAX = 4;
     
-    //left-right state count across frames
-    private int[] 				 savedStatesLR = {-1, -1, -1};
-    //forward-back state count across frames
-    private int[]				 savedStatesFB = {-1, -1, -1};
-    
-    private int				  dirStateCount = 0;	// count for dirStates before avged 
-    private boolean			  safeStateFlag = false;	// set flag if valid circle found
-    private int				  dangerStateCount = 0;	// increment if no valid circle found in a frame
+    private boolean			     safeStateFlag = false;	// set flag if valid circle found
 
     private int					dirTimer = 0;
     private int					dirsPlayedLR = 0;
@@ -119,13 +102,12 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     };
 
     public ColorBlobDetectionActivity() {
-      //  Log.i(TAG, "Instantiated new " + this.getClass());
+
     }
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-       // Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -147,8 +129,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
@@ -158,8 +139,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
         if(appHasStarted){
@@ -167,9 +147,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         	mp.setVolume(volume, volume);
         	mp.start();
         }
-        //else{
-        	//appHasStarted = true;
-        //}
     }
 
     public void onDestroy() {
@@ -181,7 +158,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
-        binaryImg = new Mat();
+        //binaryImg = new Mat();
         mDetector = new ColorBlobDetector();
         mSpectrum = new Mat();
         mBlobColorRgba = new Scalar(255);
@@ -196,10 +173,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     public void startStopAppOnClick(View view) {
     	//App is already in not tracking state
-    	if((startStopBtn.getText().toString()).equals(getResources().getString(R.string.START_APP_STRING))) {
+    	if(!appHasStarted) {
     		startStopBtn.setText(R.string.STOP_APP_STRING);
     		appHasStarted = true;
-    		//App has tracked has least once
+    		//App has tracked at least once
     		if(appFirstRun){
     			mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
     		}
@@ -289,31 +266,15 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     		mCenter = center;
     		mRadius = radius;
     	}
-    	
-    	public boolean equals(Circle other) {
-    		if(this.mCenter.y >= other.mCenter.y - 10 && this.mCenter.y <= other.mCenter.y + 10
-    				&& this.mRadius > 20 && other.mRadius > 20) {
-    			Log.d("EQ", "Center: X: " + this.mCenter.x + " Y: " + this.mCenter.y);
-    			Log.d("EQ", "Center: X: " + other.mCenter.x + " Y: " + other.mCenter.y);
-    			return true;
-    		}
-    		return false;
-    	}
     }
     
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-    	Log.d("FrameRate", "Start");
         mRgba = inputFrame.rgba();
-        binaryImg = inputFrame.gray();
+        //binaryImg = inputFrame.gray();
         mMOP2f1 = new MatOfPoint2f();
         mMOP2f2 = new MatOfPoint2f();
  
-  //      double threshold = 120;
-//        Point leftBound = new Point(threshold, 0); //30 from left edge of view, with current #s
-//        Point rightBound = new Point(0, 0); //30 from right edge of view, with current #s
-        int dirState = -1;
-      
-        if (mIsColorSelected && appHasStarted == true) {
+        if (mIsColorSelected && appHasStarted) {
             mRgba = mDetector.process(mRgba);
             
             this.dirTimer++;
@@ -321,7 +282,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             List<MatOfPoint> contours = mDetector.getContours();
             Circle[] circle = new Circle[contours.size()];
             Circle myCircle = new Circle();
-           // Log.e(TAG, "Contours count: " + contours.size());
+
             Point center; 
             float[] radius; 
             for(int i=0;i<contours.size() && !this.safeStateFlag;i++) {
@@ -351,34 +312,21 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);                
 
                 Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
-                Log.d("Center", "Radius: " + radius[0]);     
+                Log.d("Center", "Radius: " + radius[0]);
             }
             
             for(int i=0; i < contours.size(); i++) {
             	if(circle[i] != null)
             		Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
             }
-
-           /* for(int i=0; i< contours.size() - 1 && contours.size() > 1; i++) {
-            	for(int j=i+1; j < contours.size(); j++) {
-            		if(circle[i].equals(circle[j])) {
-            			Log.d("FOUNDMATCH", "i" + i + " j:" + j);
-            			myCircle = circle[i];
-            			this.safeStateFlag = 1; // valid circle found so set flag
-            			//Log.d("Mine", "Center: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-            			//Log.d("Mine", "Radius: " + myCircle.mRadius);
-            		}
-            	}
-            }*/
             
             if(this.safeStateFlag == true) {
 	
 	            /* Log.d("Mine", "TEST: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-	            // only necessary for testing */
+	            // used for testing */
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
-	            // used for new threshold code
 	            if (myCircle.mCenter.x < 400) { // change 400 to mThreshold
 	            	mPrevLocation = LEFTDIR;
 	            }
@@ -390,39 +338,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
 	        		mp.setVolume(volume, volume);
 	                mp.start();
+	                
 	                mLost = false;
 	                this.dirTimer = 0;
-	            }
-	            
-	            // used for average code
-	            if (myCircle.mCenter.x < 40) {
-	                Log.d("Mine", "LEFT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-	                this.savedStatesLR[LEFT]++;
-	            }
-	            else if (myCircle.mCenter.x > 300) {
-	                Log.d("Mine", "RIGHT: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-	                this.savedStatesLR[RIGHT]++;
-	            }
-	            else {
-	            	this.savedStatesLR[OKAY]++;
-	            }
-	            
-	            if (checkDistance(myCircle.mRadius) < 0) {
-	                //mp = MediaPlayer.create(getApplicationContext(), R.raw.frontbuzz);
-	                //mp.setVolume(volume, volume);
-	                //mp.start();
-	                //stateText.setText("FORWARD");
-	            	this.savedStatesFB[FRONT]++;
-	            }
-	            else if (checkDistance(myCircle.mRadius) > 0) {
-	                //mp = MediaPlayer.create(getApplicationContext(), R.raw.backbuzz);
-	                //mp.setVolume(volume, volume);
-	                //mp.start();
-	                //stateText.setText("BACK");
-	            	this.savedStatesFB[BACK]++;
-	            }
-	            else {
-	            	this.savedStatesFB[OKAY]++;
 	            }
             
 	            if(!badDistance || this.dirTimer == TIMER_MAX){
@@ -455,16 +373,16 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             }
             
             else {
-            	this.dangerStateCount++; // if no valid circle found, increment danger state
-            	Log.d("DANGERCOUNT", "Danger state count is " + this.dangerStateCount);
-            	// new threshold code
             	if(!mLost || this.dirTimer == TIMER_MAX){
             		
 	            	if (mPrevLocation == LEFTDIR) {
 	            		//stateText.setText("LEFT");
+	            		Log.d("Test01", "Pre-mp " + SystemClock.elapsedRealtime());
 	                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
 	                    mp.setVolume(volume, volume);
+	                    Log.d("Test01", "Pre-start " + SystemClock.elapsedRealtime());
 	                    mp.start();
+	                    Log.d("Test01", "Post-start " + SystemClock.elapsedRealtime());
 	                    this.dirTimer = 0;
 	                    this.dirsPlayedLR++;
 	            	}
@@ -483,11 +401,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	}
 	            	mLost = true;
             	}
-            	
             }
             
             this.safeStateFlag = false;
-            this.dirStateCount++;
             
             if (mPrevLocation == NODIR && this.dirTimer == TIMER_MAX) {
             	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
@@ -496,21 +412,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 this.dirTimer = 0;
             }
             
-            if (this.dirStateCount >= NUM_STATES_AVGED) {
-            	//dirState = getDirState();
-            	
-            	savedStatesLR[0] = -1;
-            	savedStatesLR[1] = -1;
-            	savedStatesLR[2] = -1;
-            	
-            	savedStatesFB[0] = -1;
-            	savedStatesFB[1] = -1;
-            	savedStatesFB[2] = -1;
-            	
-            	this.dirStateCount = 0;
-            	this.dangerStateCount = 0;
-            }
-
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
             Mat colorLabel = mRgba.submat(4, 68, 4, 68);
@@ -519,19 +420,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
             mSpectrum.copyTo(spectrumLabel);
         }
-        Log.d("FrameRate", "Stop");
         return mRgba;
-    }
-    
-    private int checkDistance(float radius) {
-    	int toReturn = 0;
-    	
-    	if (radius > 100)  // CHANGE THESE CONSTANTS
-    		toReturn = (int)radius - 100;
-    	else if (radius < 50)
-    		toReturn = (int)radius - 50;
-    	
-        return toReturn;
     }
 
     private Scalar converScalarHsv2Rgba(Scalar hsvColor) {
@@ -541,61 +430,4 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
         return new Scalar(pointMatRgba.get(0, 0));
     }
-    
- // returns LEFTDIR / RIGHTDIR / FRONTDIR / BACKDIR / DANGERDIR
-    private int getDirState() {
-    	int retVal = -1;
-    	
-    	// if danger is the majority of 5 frames
-    	if(dangerStateCount >= NUM_STATES_AVGED / 2) {
-    		//mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
-           // mp.setVolume(volume, volume);
-            //mp.start();
-    		retVal = DANGERDIR;
-    	}
-    	//if LR has less okays, output left or right
-    	if(this.savedStatesLR[OKAY] < this.savedStatesFB[OKAY]) {
-    		if(this.savedStatesLR[LEFT] > this.savedStatesLR[RIGHT]) {
-    			//Log.d("Mine", "LEFT: Point: X: " + center.x + " Y: " + center.y);
-        		//mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
-    		//	mp.setVolume(volume, volume);
-              //  mp.start();
-    			retVal = LEFTDIR;
-    		}
-    		else if (this.savedStatesLR[LEFT] < this.savedStatesLR[RIGHT]) {
-    			//Log.d("Mine", "RIGHT: Point: X: " + center.x + " Y: " + center.y);
-        	//	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
-    		//	mp.setVolume(volume, volume);
-             //   mp.start();
-    			retVal = RIGHTDIR;
-    		}
-    	}
-    	//else if LR has more okays, output front or back
-    	else if(this.savedStatesLR[OKAY] > this.savedStatesFB[OKAY]) {
-    		if(this.savedStatesFB[FRONT] > this.savedStatesFB[BACK]) {
-    			//mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
-    			//mp.setVolume(volume, volume);
-                //mp.start();
-    			retVal = FRONTDIR;
-    		}
-    		else if (this.savedStatesFB[FRONT] < this.savedStatesFB[BACK]) {
-    			//mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
-    			//mp.setVolume(volume, volume);
-                //mp.start();
-    			retVal = BACKDIR;
-    		}
-    	}
-    	//if LR and FB have equal amounts of okays, just output okay
-    	else {
-    		retVal = OKAY;	
-    		//mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
-    		//mp.setVolume(volume, volume);
-            //mp.start();
-    	}
-        //mp.setVolume(volume, volume);
-    	//mp.start();
-    	
-    	return retVal;
-    }
-
 }
