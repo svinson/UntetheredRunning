@@ -275,6 +275,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
     
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+    	
+    	Log.i("Test02", "Start" + SystemClock.elapsedRealtime());
+    	
         mRgba = inputFrame.rgba();
         //binaryImg = inputFrame.gray();
         mMOP2f1 = new MatOfPoint2f();
@@ -308,28 +311,27 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 myCircle = new Circle(center, radius[0]);
                 
                 if(points.length > 6 && myCircle.mRadius > MIN_RADIUS && myCircle.mRadius < MAX_RADIUS) {
-                	Log.d("RADIUSCALC", "With Radius: " + i + "X: " + myCircle.mRadius);
+                	//Log.d("RADIUSCALC", "With Radius: " + i + "X: " + myCircle.mRadius);
                 	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
-                	Log.d("FOUNDMATCH", "OK");
+                	//Log.d("FOUNDMATCH", "OK");
                 	this.safeStateFlag = true;
                 }
 
                 //Convert back to MatOfPoint and put the new values back into the contours list
                 mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);                
 
-                Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
-                Log.d("Center", "Radius: " + radius[0]);
+                //Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
+                //Log.d("Center", "Radius: " + radius[0]);
             }
             
-            for(int i=0; i < contours.size(); i++) {
+            /*for(int i=0; i < contours.size(); i++) {
             	if(circle[i] != null)
             		Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
-            }
+            }*/
             
             if(this.safeStateFlag == true) {
-	
 	            /* Log.d("Mine", "TEST: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-	            // used for testing */
+	            // only used for testing */
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
@@ -378,15 +380,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             
             else {
             	if(!mLost || this.dirTimer == TIMER_MAX){
-            		
 	            	if (mPrevLocation == LEFTDIR) {
 	            		//stateText.setText("LEFT");
-	            		Log.d("Test01", "Pre-mp " + SystemClock.elapsedRealtime());
 	                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
 	                    mp.setVolume(volume, volume);
-	                    Log.d("Test01", "Pre-start " + SystemClock.elapsedRealtime());
 	                    mp.start();
-	                    Log.d("Test01", "Post-start " + SystemClock.elapsedRealtime());
 	                    this.dirTimer = 0;
 	                    this.dirsPlayedLR++;
 	            	}
