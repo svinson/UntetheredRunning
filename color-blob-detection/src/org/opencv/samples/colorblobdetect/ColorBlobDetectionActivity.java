@@ -259,7 +259,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
 
         mDetector.setHsvColor(mBlobColorHsv);
-
+        Log.i("HSV", mBlobColorHsv.val[0] + " " + mBlobColorHsv.val[1] +
+                " " + mBlobColorHsv.val[2] + " " + mBlobColorHsv.val[3]);
+        
         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
 
         mIsColorSelected = true;

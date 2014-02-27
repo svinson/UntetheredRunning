@@ -87,8 +87,8 @@ public class ColorBlobDetector {
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
         Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
         
-        Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
-        //Core.inRange(mHsvMat, new Scalar(225, 111, 205), new Scalar(255, 211, 205), mMask1);
+        //Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
+        Core.inRange(mHsvMat, new Scalar(0, 128, 140), new Scalar(20, 199, 245), mMask);
         Imgproc.dilate(mMask, mDilatedMask, new Mat());
         Imgproc.pyrUp(mDilatedMask, rgbaImage);
         Imgproc.pyrUp(rgbaImage, rgbaImage);
