@@ -293,8 +293,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             Circle myCircle = new Circle();
 
             Point center; 
-            float[] radius; 
-            for(int i=0;i<contours.size() && !this.safeStateFlag;i++) {
+            float[] radius;
+            int bestMatch = -1;
+            float maxRad = -1;
+            
+            for(int i=0; i<contours.size(); i++) {
 				//Convert contours(i) from MatOfPoint to MatOfPoint2f
                 contours.get(i).convertTo(mMOP2f1, CvType.CV_32FC2);
 				//Processing on mMOP2f1 which is in type MatOfPoint2f
@@ -308,20 +311,22 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 radius = new float[1];
                 Imgproc.minEnclosingCircle(mMOP2f2, center, radius);
                 circle[i] = new Circle(center, radius[0]);
-                myCircle = new Circle(center, radius[0]);
                 
-                if(points.length > 6 && myCircle.mRadius > MIN_RADIUS && myCircle.mRadius < MAX_RADIUS) {
-                	//Log.d("RADIUSCALC", "With Radius: " + i + "X: " + myCircle.mRadius);
-                	Core.circle(mRgba, center, (int) radius[0], CONTOUR_COLOR, 3);
-                	//Log.d("FOUNDMATCH", "OK");
-                	this.safeStateFlag = true;
+                if(points.length > 6 && circle[i].mRadius > MIN_RADIUS && circle[i].mRadius > maxRad) {
+               		maxRad = circle[i].mRadius;
+               		bestMatch = i;
                 }
 
                 //Convert back to MatOfPoint and put the new values back into the contours list
                 mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);                
-
                 //Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
                 //Log.d("Center", "Radius: " + radius[0]);
+            }
+            
+            if (bestMatch >= 0) {
+            	myCircle = circle[bestMatch];
+            	this.safeStateFlag = true;
+            	Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
             }
             
             /*for(int i=0; i < contours.size(); i++) {
