@@ -54,7 +54,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private int					 mThreshold = 400; // should change to a dynamic value
     private boolean              mLost = false;
     
-    private TextView             stateText;
+    //private TextView             stateText;
     private Button               startStopBtn;
 
     private float 				 volume = 1.0f;
@@ -121,8 +121,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mOpenCvCameraView.setCvCameraViewListener(this);
         //mOpenCvCameraView.setMaxFrameSize(320, 240);
         
-        stateText = (TextView) findViewById(R.id.stateText);
-        stateText.setText(R.string.NOT_TRACKING);
+        //stateText = (TextView) findViewById(R.id.stateText);
+        //stateText.setText(R.string.NOT_TRACKING);
         mp = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
 		mp.setVolume(volume, volume);
         mp.start();
@@ -246,7 +246,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	        touchedRegionRgba.release();
 	        touchedRegionHsv.release();
 	        
-	        stateText.setText(R.string.TRACKING);
+	        //stateText.setText(R.string.TRACKING);
 	        appHasStarted = true;
 	        startStopBtn.setText(R.string.STOP_APP_STRING);
     		appHasStarted = true;
