@@ -288,7 +288,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
     
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-    	
+        Log.d("VIEWSIZE", "width: " + mOpenCvCameraView.getWidth());
+        Log.d("VIEWSIZE", "height: " + mOpenCvCameraView.getHeight());
     	Log.i("Test02", "Start" + SystemClock.elapsedRealtime());
     	
         mRgba = inputFrame.rgba();
@@ -352,8 +353,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             }*/
             
             if (this.safeStateFlag) {
-	            Log.d("TEST", "Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-	            Log.d("TEST", "Radius: " + myCircle.mRadius);
+                Log.d("VIEWSIZE", "width: " + mOpenCvCameraView.getWidth());
+                Log.d("VIEWSIZE", "height: " + mOpenCvCameraView.getHeight());
+	            Log.d("VIEWSIZE", "Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+	            Log.d("VIEWSIZE", "Radius: " + myCircle.mRadius);
 	            // only used for testing
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
