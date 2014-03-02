@@ -83,8 +83,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private int					dirsPlayedFB = 0;
     private int					prevDirFB = NODIR;
     
-    private static final int	MIN_RADIUS = 22;
-    private static final int	MAX_RADIUS = 60;
+    private static final int	MIN_RADIUS_HIGH = 22; // not calibrated
+    private static final int	MIN_RADIUS_LOW = 10; // not calibrated
+    private static final int	MAX_RADIUS = 60; // not used
     
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -314,7 +315,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 Imgproc.minEnclosingCircle(mMOP2f2, center, radius);
                 circle[i] = new Circle(center, radius[0]);
                 
-                if(points.length > 6 && circle[i].mRadius > MIN_RADIUS && circle[i].mRadius > maxRad) {
+                if (points.length > 6 && circle[i].mRadius > maxRad &&
+                    (circle[i].mRadius > MIN_RADIUS_HIGH || (this.safeStateFlag && circle[i].mRadius > MIN_RADIUS_LOW))) {
                		maxRad = circle[i].mRadius;
                		bestMatch = i;
                 }
@@ -329,6 +331,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	myCircle = circle[bestMatch];
             	this.safeStateFlag = true;
             	Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
+            }
+            else {
+                this.safeStateFlag = false;
             }
             
             /*for(int i=0; i < contours.size(); i++) {
@@ -459,9 +464,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	mLost = true;
             	}
             }
-            
-            this.safeStateFlag = false;
-            
+
 //            if (mPrevLocation == NODIR && this.dirTimer == TIMER_MAX) {
 //            	//stateText.setText("LOST");
 //            	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
