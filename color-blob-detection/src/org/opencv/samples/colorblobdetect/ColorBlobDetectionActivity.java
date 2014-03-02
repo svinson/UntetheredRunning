@@ -125,6 +125,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mp = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
 		mp.setVolume(volume, volume);
         mp.start();
+        
+        Log.d("VIEWSIZE", "width: " + mOpenCvCameraView.getWidth());
+        Log.d("VIEWSIZE", "height: " + mOpenCvCameraView.getHeight());
     }
 
     @Override
@@ -340,8 +343,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             }*/
             
             if (this.safeStateFlag) {
-	            /* Log.d("Mine", "TEST: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-	            // only used for testing */
+	            Log.d("TEST", "Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
+	            Log.d("TEST", "Radius: " + myCircle.mRadius);
+	            // only used for testing
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
@@ -375,7 +379,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     this.dirsPlayedLR = 0;
 	            }
             
-	            if (!badDistance || this.dirTimer == TIMER_MAX) {
+	            if ((!badDistance && (myCircle.mCenter.x < 750 && myCircle.mCenter.x > 50 && 
+	                  myCircle.mCenter.y > 50 && myCircle.mCenter.y < 350)) || this.dirTimer == TIMER_MAX) {
             		if (myCircle.mRadius > 65) { // needs calibration
             			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
 	                    mp.setVolume(volume, volume);
