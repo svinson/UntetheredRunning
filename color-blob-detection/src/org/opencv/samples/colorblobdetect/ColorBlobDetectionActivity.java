@@ -54,7 +54,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private int					 mThreshold = 400; // should change to a dynamic value
     private boolean              mLost = false;
     
-    //private TextView             stateText;
     private Button               startStopBtn;
 
     private float 				 volume = 1.0f;
@@ -85,7 +84,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     
     private static final int	MIN_RADIUS_HIGH = 22; // not calibrated
     private static final int	MIN_RADIUS_LOW = 10; // not calibrated
-    private static final int	MAX_RADIUS = 60; // not used
     
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -124,8 +122,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mOpenCvCameraView.setCvCameraViewListener(this);
         //mOpenCvCameraView.setMaxFrameSize(320, 240);
         
-        //stateText = (TextView) findViewById(R.id.stateText);
-        //stateText.setText(R.string.NOT_TRACKING);
         mp = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
 		mp.setVolume(volume, volume);
         mp.start();
@@ -145,7 +141,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
-        if(appHasStarted){
+        if (appHasStarted){
         	mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
         	mp.setVolume(volume, volume);
         	mp.start();
@@ -176,11 +172,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     public void startStopAppOnClick(View view) {
     	//App is already in not tracking state
-    	if(!appHasStarted) {
+    	if (!appHasStarted) {
     		startStopBtn.setText(R.string.STOP_APP_STRING);
     		appHasStarted = true;
     		//App has tracked at least once
-    		if(appFirstRun){
+    		if (appFirstRun){
     			mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
     		}
     		else{
@@ -203,7 +199,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
-        if(!mIsColorSelected){
+        if (!mIsColorSelected){
 	        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
 	        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
 	
@@ -249,7 +245,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	        touchedRegionRgba.release();
 	        touchedRegionHsv.release();
 	        
-	        //stateText.setText(R.string.TRACKING);
 	        appHasStarted = true;
 	        startStopBtn.setText(R.string.STOP_APP_STRING);
     		appHasStarted = true;
@@ -337,11 +332,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             }
             
             /*for(int i=0; i < contours.size(); i++) {
-            	if(circle[i] != null)
+            	if (circle[i] != null)
             		Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
             }*/
             
-            if(this.safeStateFlag == true) {
+            if (this.safeStateFlag) {
 	            /* Log.d("Mine", "TEST: Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
 	            // only used for testing */
 	           
@@ -355,7 +350,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            }
 	            
 	            if (mLost && myCircle.mCenter.x > 200 && myCircle.mCenter.x < 600) {
-	            	//stateText.setText("GOOD");
 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
 	        		mp.setVolume(volume, volume);
 	                mp.start();
@@ -378,8 +372,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     this.dirsPlayedLR = 0;
 	            }
             
-	            if(!badDistance || this.dirTimer == TIMER_MAX){
-            		if(myCircle.mRadius > 65 || (myCircle.mRadius >= 55 && badDistance == true)){ //Change to correct high threshold
+	            if (!badDistance || this.dirTimer == TIMER_MAX){
+            		if (myCircle.mRadius > 65 || (myCircle.mRadius >= 55 && badDistance == true)){ // BUG HERE
             			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
 	                    mp.setVolume(volume, volume);
 	                    mp.start();
@@ -387,7 +381,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	                    this.dirTimer = 0;
 	                    this.prevDirFB = BACKDIR;
             		}
-            		else if(myCircle.mRadius < 35 || (myCircle.mRadius <= 44 && badDistance == true)){ //Change to correct low threshold
+            		else if (myCircle.mRadius < 35 || (myCircle.mRadius <= 44 && badDistance == true)){ // BUG HERE
         				mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
         				mp.setVolume(volume, volume);
         				mp.start();
@@ -396,8 +390,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         				this.prevDirFB = FRONTDIR;
             		}
             	}
-            	if((badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44) || this.dirTimer == TIMER_MAX){
-            		//stateText.setText("GOOD");
+            	if ((badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44) || this.dirTimer == TIMER_MAX){ // BUG HERE
     				mp = MediaPlayer.create(getApplicationContext(), R.raw.good_distance);
     				mp.setVolume(volume, volume);
     				mp.start();
@@ -411,7 +404,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             
             // (This should work assuming the circle radius doesn't get too small as the 
             // target leaves the side of the screen for left/right)
-            else if (this.safeStateFlag == false && badDistance == true && this.dirTimer == TIMER_MAX) {
+            else if (badDistance == true && this.dirTimer == TIMER_MAX) {
                 if (this.dirsPlayedFB >= NUM_PLAYED_MAX) {
                 	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
                     mp.setVolume(volume, volume);
@@ -435,43 +428,38 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	}
             }
             
-            else {
-            	if(!mLost || this.dirTimer == TIMER_MAX){
-            		if (this.dirsPlayedLR >= NUM_PLAYED_MAX) {
-            			mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
-                        mp.setVolume(volume, volume);
-                        mp.start();
-                        this.dirTimer = 0;
-	            		mPrevLocation = NODIR;
-	            	}
-            		else if (mPrevLocation == LEFTDIR) {
-	            		//stateText.setText("LEFT");
-	                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
-	                    mp.setVolume(volume, volume);
-	                    mp.start();
-	                    this.dirTimer = 0;
-	                    this.dirsPlayedLR++;
-	            	}
-	            	else if (mPrevLocation == RIGHTDIR) {
-	            		//stateText.setText("RIGHT");
-	                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
-	                    mp.setVolume(volume, volume);
-	                    mp.start();
-	                    this.dirTimer = 0;
-	                    this.dirsPlayedLR++;
-	            	}
-	            	
-	            	mLost = true;
+            else if (!mLost || this.dirTimer == TIMER_MAX){
+        		if (this.dirsPlayedLR >= NUM_PLAYED_MAX) {
+        			mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
+                    mp.setVolume(volume, volume);
+                    mp.start();
+                    this.dirTimer = 0;
+            		mPrevLocation = NODIR;
             	}
+        		else if (mPrevLocation == LEFTDIR) {
+                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
+                    mp.setVolume(volume, volume);
+                    mp.start();
+                    this.dirTimer = 0;
+                    this.dirsPlayedLR++;
+            	}
+            	else if (mPrevLocation == RIGHTDIR) {
+                    mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
+                    mp.setVolume(volume, volume);
+                    mp.start();
+                    this.dirTimer = 0;
+                    this.dirsPlayedLR++;
+            	}
+            	
+            	mLost = true;
             }
 
 //            if (mPrevLocation == NODIR && this.dirTimer == TIMER_MAX) {
-//            	//stateText.setText("LOST");
 //            	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
 //                mp.setVolume(volume, volume);
 //                mp.start();
 //                this.dirTimer = 0;
-//            }
+//            } // commented out because it was overlapping other commands
             
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
