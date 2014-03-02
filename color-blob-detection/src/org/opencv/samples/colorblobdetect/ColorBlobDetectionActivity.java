@@ -20,7 +20,9 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.content.Context;
 import android.media.MediaPlayer;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -109,6 +111,13 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
+    	Log.d("WiFi","Wi" + wifiManager.isWifiEnabled());
+    	while(wifiManager.isWifiEnabled() == true){
+    		wifiManager.setWifiEnabled(false);
+    		Log.d("WiFi","WiFi stuck");
+    	}
+    	Log.d("WiFi","Wi Off?" + wifiManager.isWifiEnabled());
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
