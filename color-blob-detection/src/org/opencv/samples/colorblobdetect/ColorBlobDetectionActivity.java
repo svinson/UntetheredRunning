@@ -186,7 +186,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
 
     public void startStopAppOnClick(View view) {
-    	//App is already in not tracking state
+    	//App is in not tracking state
     	if (!appHasStarted) {
     		startStopBtn.setText(R.string.STOP_APP_STRING);
     		appHasStarted = true;
@@ -203,6 +203,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
       	}
     	//App was in running state
     	else {
+    		badDistance = false;
+    		mLost = false;
+    		safeStateFlag = false;
+    		mPrevLocation = NODIR;
+    		
     		startStopBtn.setText(R.string.START_APP_STRING);
     		mp = MediaPlayer.create(getApplicationContext(), R.raw.tracking_stopped);
     		appHasStarted = false;
@@ -338,6 +343,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             }
             
             if (bestMatch >= 0) {
+            	if (this.safeStateFlag == false) {
+            		// maybe add feedback here saying marker was detected
+            	}
             	myCircle = circle[bestMatch];
             	this.safeStateFlag = true;
             	Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
@@ -358,11 +366,16 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
-	            if (myCircle.mCenter.x < 400) { // change 400 to mThreshold
-	            	mPrevLocation = LEFTDIR;
+	            if (myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400) {
+	            	if (myCircle.mCenter.x < 400) { // change 400 to mThreshold
+	 	            	mPrevLocation = LEFTDIR;
+	 	            }
+	 	            else {
+	 	            	mPrevLocation = RIGHTDIR;
+	 	            }
 	            }
 	            else {
-	            	mPrevLocation = RIGHTDIR;
+	            	mPrevLocation = NODIR;
 	            }
 	            
 	            if (mLost && myCircle.mCenter.x > 200 && myCircle.mCenter.x < 600) {
@@ -390,7 +403,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             
 	            if ((!badDistance && (myCircle.mCenter.x < 750 && myCircle.mCenter.x > 50 && 
 	                  myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400)) || this.dirTimer == TIMER_MAX) {
-            		if (myCircle.mRadius > 65) { // needs calibration
+            		if (myCircle.mRadius > 75) { // needs calibration
             			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
 	                    mp.setVolume(volume, volume);
 	                    mp.start();
@@ -419,32 +432,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	this.dirsPlayedFB = 0;
             }
             
-            // (This should work assuming the circle radius doesn't get too small as the 
-            // target leaves the side of the screen for left/right)
-            else if (badDistance && this.dirTimer == TIMER_MAX) {
-                if (this.dirsPlayedFB >= NUM_PLAYED_MAX) {
-                	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
-                    mp.setVolume(volume, volume);
-                    mp.start();
-                    this.dirTimer = 0;
-                    this.prevDirFB = NODIR;
-                }
-            	else if (this.prevDirFB == BACKDIR) {
-            		mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
-                    mp.setVolume(volume, volume);
-                    mp.start();
-                    this.dirTimer = 0;
-                    this.dirsPlayedFB++;
-            	}
-            	else if (this.prevDirFB == FRONTDIR) {
-            		mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
-    				mp.setVolume(volume, volume);
-    				mp.start();
-    				this.dirTimer = 0;
-    				this.dirsPlayedFB++;
-            	}
-            }
-            
             else if (!mLost || this.dirTimer == TIMER_MAX) {
         		if (this.dirsPlayedLR >= NUM_PLAYED_MAX) {
         			mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
@@ -471,12 +458,31 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	mLost = true;
             }
 
-//            if (mPrevLocation == NODIR && this.dirTimer == TIMER_MAX) {
-//            	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
-//                mp.setVolume(volume, volume);
-//                mp.start();
-//                this.dirTimer = 0;
-//            }
+            // (This should work assuming the circle radius doesn't get too small as the 
+            // target leaves the side of the screen for left/right)
+            else if (badDistance && this.dirTimer == TIMER_MAX) {
+                if (this.dirsPlayedFB >= NUM_PLAYED_MAX) {
+                	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
+                    mp.setVolume(volume, volume);
+                    mp.start();
+                    this.dirTimer = 0;
+                    this.prevDirFB = NODIR;
+                }
+            	else if (this.prevDirFB == BACKDIR) {
+            		mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
+                    mp.setVolume(volume, volume);
+                    mp.start();
+                    this.dirTimer = 0;
+                    this.dirsPlayedFB++;
+            	}
+            	else if (this.prevDirFB == FRONTDIR) {
+            		mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
+    				mp.setVolume(volume, volume);
+    				mp.start();
+    				this.dirTimer = 0;
+    				this.dirsPlayedFB++;
+            	}
+            }
             
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
