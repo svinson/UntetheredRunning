@@ -111,13 +111,13 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
+    	/*WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
     	Log.d("WiFi","Wi" + wifiManager.isWifiEnabled());
     	while(wifiManager.isWifiEnabled() == true){
     		wifiManager.setWifiEnabled(false);
     		Log.d("WiFi","WiFi stuck");
     	}
-    	Log.d("WiFi","Wi Off?" + wifiManager.isWifiEnabled());
+    	Log.d("WiFi","Wi Off?" + wifiManager.isWifiEnabled());*/
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -381,30 +381,31 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            	mPrevLocation = NODIR;
 	            }
 	            
-	            if (mLost && myCircle.mCenter.x > 200 && myCircle.mCenter.x < 600) {
-	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
-	        		mp.setVolume(volume, volume);
-	                mp.start();
-	                mLost = false;
-	                this.dirsPlayedLR = 0;
-	                this.dirTimer = 0;
+	            if (mLost) {
+		            if (myCircle.mCenter.x > 200 && myCircle.mCenter.x < 600) {
+		            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
+		        		mp.setVolume(volume, volume);
+		                mp.start();
+		                mLost = false;
+		                this.dirsPlayedLR = 0;
+		                this.dirTimer = 0;
+		            }
+		            else if (myCircle.mCenter.x <= 100 && this.dirTimer == TIMER_MAX) {
+		            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
+	                    mp.setVolume(volume, volume);
+	                    mp.start();
+	                    this.dirTimer = 0;
+	                    this.dirsPlayedLR = 0;
+		            }
+		            else if (myCircle.mCenter.x >= 700 && this.dirTimer == TIMER_MAX) {
+		            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
+	                    mp.setVolume(volume, volume);
+	                    mp.start();
+	                    this.dirTimer = 0;
+	                    this.dirsPlayedLR = 0;
+		            }
 	            }
-	            else if (mLost && myCircle.mCenter.x <= 100 && this.dirTimer == TIMER_MAX) {
-	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
-                    mp.setVolume(volume, volume);
-                    mp.start();
-                    this.dirTimer = 0;
-                    this.dirsPlayedLR = 0;
-	            }
-	            else if (mLost && myCircle.mCenter.x >= 700 && this.dirTimer == TIMER_MAX) {
-	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
-                    mp.setVolume(volume, volume);
-                    mp.start();
-                    this.dirTimer = 0;
-                    this.dirsPlayedLR = 0;
-	            }
-            
-	            if ((!badDistance && (myCircle.mCenter.x < 750 && myCircle.mCenter.x > 50 && 
+	            else if ((!badDistance && (myCircle.mCenter.x < 750 && myCircle.mCenter.x > 50 && 
 	                  myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400)) || this.dirTimer == TIMER_MAX) {
             		if (myCircle.mRadius > 75) { // needs calibration
             			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
@@ -423,7 +424,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         				this.prevDirFB = FRONTDIR;
             		}
             	}
-            	if ((badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44)) { // || this.dirTimer == TIMER_MAX) { // commented out becasue it was overlapping other commands
+	            else if ((badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44)) { // || this.dirTimer == TIMER_MAX) { // commented out becasue it was overlapping other commands
     				mp = MediaPlayer.create(getApplicationContext(), R.raw.good_distance);
     				mp.setVolume(volume, volume);
     				mp.start();
