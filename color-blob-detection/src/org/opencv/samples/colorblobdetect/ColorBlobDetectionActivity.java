@@ -369,14 +369,14 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	                this.dirsPlayedLR = 0;
 	                this.dirTimer = 0;
 	            }
-	            else if (mLost && myCircle.mCenter.x <= 200 && this.dirTimer == TIMER_MAX) {
+	            else if (mLost && myCircle.mCenter.x <= 100 && this.dirTimer == TIMER_MAX) {
 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
                     mp.setVolume(volume, volume);
                     mp.start();
                     this.dirTimer = 0;
                     this.dirsPlayedLR = 0;
 	            }
-	            else if (mLost && myCircle.mCenter.x >= 600 && this.dirTimer == TIMER_MAX) {
+	            else if (mLost && myCircle.mCenter.x >= 700 && this.dirTimer == TIMER_MAX) {
 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
                     mp.setVolume(volume, volume);
                     mp.start();
@@ -416,7 +416,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             
             // (This should work assuming the circle radius doesn't get too small as the 
             // target leaves the side of the screen for left/right)
-            else if (badDistance == true && this.dirTimer == TIMER_MAX) {
+            else if (badDistance && this.dirTimer == TIMER_MAX) {
                 if (this.dirsPlayedFB >= NUM_PLAYED_MAX) {
                 	mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
                     mp.setVolume(volume, volume);
