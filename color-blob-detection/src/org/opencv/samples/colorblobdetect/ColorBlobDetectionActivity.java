@@ -76,7 +76,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	 NUM_PLAYED_MAX = 4;
     
     private boolean			     safeStateFlag = false;	// set flag if valid circle found
-
+    private boolean				first = true;
     private int					dirTimer = 0;
     private int					dirsPlayedLR = 0;
     private int					dirsPlayedFB = 0;
@@ -158,7 +158,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         //binaryImg = new Mat();
-        mDetector = new ColorBlobDetector();
+        if(first) {
+        	mDetector = new ColorBlobDetector();
+        }
+        first = false;
         mSpectrum = new Mat();
         mBlobColorRgba = new Scalar(255);
         mBlobColorHsv = new Scalar(255);
