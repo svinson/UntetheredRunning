@@ -389,7 +389,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            }
             
 	            if ((!badDistance && (myCircle.mCenter.x < 750 && myCircle.mCenter.x > 50 && 
-	                  myCircle.mCenter.y > 50 && myCircle.mCenter.y < 350)) || this.dirTimer == TIMER_MAX) {
+	                  myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400)) || this.dirTimer == TIMER_MAX) {
             		if (myCircle.mRadius > 65) { // needs calibration
             			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
 	                    mp.setVolume(volume, volume);
