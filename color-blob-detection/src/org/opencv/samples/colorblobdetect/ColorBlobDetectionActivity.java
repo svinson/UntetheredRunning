@@ -141,7 +141,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
-        if (appHasStarted){
+        if (appHasStarted) {
         	mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
         	mp.setVolume(volume, volume);
         	mp.start();
@@ -176,7 +176,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     		startStopBtn.setText(R.string.STOP_APP_STRING);
     		appHasStarted = true;
     		//App has tracked at least once
-    		if (appFirstRun){
+    		if (appFirstRun) {
     			mp = MediaPlayer.create(getApplicationContext(), R.raw.app_resumed);
     		}
     		else{
@@ -199,7 +199,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
-        if (!mIsColorSelected){
+        if (!mIsColorSelected) {
 	        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
 	        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
 	
@@ -372,8 +372,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     this.dirsPlayedLR = 0;
 	            }
             
-	            if (!badDistance || this.dirTimer == TIMER_MAX){
-            		if (myCircle.mRadius > 65 || (myCircle.mRadius >= 55 && badDistance == true)){ // BUG HERE
+	            if (!badDistance || this.dirTimer == TIMER_MAX) {
+            		if (myCircle.mRadius > 65) { // needs calibration
             			mp = MediaPlayer.create(getApplicationContext(), R.raw.slow_down);
 	                    mp.setVolume(volume, volume);
 	                    mp.start();
@@ -381,7 +381,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	                    this.dirTimer = 0;
 	                    this.prevDirFB = BACKDIR;
             		}
-            		else if (myCircle.mRadius < 35 || (myCircle.mRadius <= 44 && badDistance == true)){ // BUG HERE
+            		else if (myCircle.mRadius < 35) { // needs calibration
         				mp = MediaPlayer.create(getApplicationContext(), R.raw.speed_up);
         				mp.setVolume(volume, volume);
         				mp.start();
@@ -390,7 +390,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         				this.prevDirFB = FRONTDIR;
             		}
             	}
-            	if ((badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44) || this.dirTimer == TIMER_MAX){ // BUG HERE
+            	if ((badDistance && myCircle.mRadius < 55 && myCircle.mRadius > 44)) { // || this.dirTimer == TIMER_MAX) { // commented out becasue it was overlapping other commands
     				mp = MediaPlayer.create(getApplicationContext(), R.raw.good_distance);
     				mp.setVolume(volume, volume);
     				mp.start();
@@ -428,7 +428,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	}
             }
             
-            else if (!mLost || this.dirTimer == TIMER_MAX){
+            else if (!mLost || this.dirTimer == TIMER_MAX) {
         		if (this.dirsPlayedLR >= NUM_PLAYED_MAX) {
         			mp = MediaPlayer.create(getApplicationContext(), R.raw.lost_marker);
                     mp.setVolume(volume, volume);
@@ -459,7 +459,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 //                mp.setVolume(volume, volume);
 //                mp.start();
 //                this.dirTimer = 0;
-//            } // commented out because it was overlapping other commands
+//            }
             
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
