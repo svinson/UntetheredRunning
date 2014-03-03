@@ -75,7 +75,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	 DANGERDIR = 4;
     
     private static final int	 TIMER_MAX = 50;
-    private static final int	 NUM_PLAYED_MAX = 4;
+    private static final int	 NUM_PLAYED_MAX = 2;
     
     private boolean			     safeStateFlag = false;	// set flag if valid circle found
     private boolean				first = true;
@@ -84,7 +84,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private int					dirsPlayedFB = 0;
     private int					prevDirFB = NODIR;
     
-    private static final int	MIN_RADIUS_HIGH = 22; // not calibrated
+    private static final int	MIN_RADIUS_HIGH = 20; // not calibrated
     private static final int	MIN_RADIUS_LOW = 10; // not calibrated
     
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
@@ -369,40 +369,34 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
-	            if (myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400) {
-	            	if (myCircle.mCenter.x < 400) { // change 400 to mThreshold
-	 	            	mPrevLocation = LEFTDIR;
-	 	            }
-	 	            else {
-	 	            	mPrevLocation = RIGHTDIR;
-	 	            }
-	            }
-	            else {
-	            	mPrevLocation = NODIR;
-	            }
+	            if (myCircle.mCenter.x < 150) { // change to mThreshold
+            		mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
+                    mp.setVolume(volume, volume);
+                    mp.start();
+                    mLost = true;
+                    this.dirTimer = 0;
+                    this.dirsPlayedLR = 0;
+            		mPrevLocation = LEFTDIR;
+ 	            }
+ 	            else if (myCircle.mCenter.x > 650) {
+ 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
+                    mp.setVolume(volume, volume);
+                    mp.start();
+                    mLost = true;
+                    this.dirTimer = 0;
+                    this.dirsPlayedLR = 0;
+ 	            	mPrevLocation = RIGHTDIR;
+ 	            }
 	            
 	            if (mLost) {
-		            if (myCircle.mCenter.x > 200 && myCircle.mCenter.x < 600) {
+		            if (myCircle.mCenter.x > 250 && myCircle.mCenter.x < 550) {
 		            	mp = MediaPlayer.create(getApplicationContext(), R.raw.good_position);
 		        		mp.setVolume(volume, volume);
 		                mp.start();
 		                mLost = false;
 		                this.dirsPlayedLR = 0;
 		                this.dirTimer = 0;
-		            }
-		            else if (myCircle.mCenter.x <= 100 && this.dirTimer == TIMER_MAX) {
-		            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
-	                    mp.setVolume(volume, volume);
-	                    mp.start();
-	                    this.dirTimer = 0;
-	                    this.dirsPlayedLR = 0;
-		            }
-		            else if (myCircle.mCenter.x >= 700 && this.dirTimer == TIMER_MAX) {
-		            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
-	                    mp.setVolume(volume, volume);
-	                    mp.start();
-	                    this.dirTimer = 0;
-	                    this.dirsPlayedLR = 0;
+		                mPrevLocation = NODIR;
 		            }
 	            }
 	            else if ((!badDistance && (myCircle.mCenter.x < 750 && myCircle.mCenter.x > 50 && 
