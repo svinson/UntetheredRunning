@@ -369,6 +369,18 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
+	            if (myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400) {
+	            	if (myCircle.mCenter.x < 400) { // change 400 to mThreshold
+	 	            	mPrevLocation = LEFTDIR;
+	 	            }
+	 	            else {
+	 	            	mPrevLocation = RIGHTDIR;
+	 	            }
+	            }
+	            else {
+	            	mPrevLocation = NODIR;
+	            }
+	            
 	            if (!mLost || this.dirTimer == TIMER_MAX) {
 		            if (myCircle.mCenter.x < 150) { // change to mThreshold
 	            		mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
@@ -376,7 +388,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	                    mp.start();
 	                    mLost = true;
 	                    this.dirTimer = 0;
-	                    this.dirsPlayedLR = 0;
+	                    this.dirsPlayedLR++;
 	            		mPrevLocation = LEFTDIR;
 	 	            }
 	 	            else if (myCircle.mCenter.x > 650) {
@@ -385,7 +397,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	                    mp.start();
 	                    mLost = true;
 	                    this.dirTimer = 0;
-	                    this.dirsPlayedLR = 0;
+	                    this.dirsPlayedLR++;
 	 	            	mPrevLocation = RIGHTDIR;
 	 	            }
 	            }
@@ -446,6 +458,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     mp.start();
                     this.dirTimer = 0;
                     this.dirsPlayedLR++;
+                    mLost = true;
             	}
             	else if (mPrevLocation == RIGHTDIR) {
                     mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
@@ -453,9 +466,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     mp.start();
                     this.dirTimer = 0;
                     this.dirsPlayedLR++;
+                    mLost = true;
             	}
-            	
-            	mLost = true;
             }
 
             // (This should work assuming the circle radius doesn't get too small as the 
