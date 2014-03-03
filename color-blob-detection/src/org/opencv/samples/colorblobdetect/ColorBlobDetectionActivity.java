@@ -369,7 +369,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
-	            if (myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400) {
+	            if (myCircle.mCenter.y > 100 && myCircle.mCenter.y < 350) {
 	            	if (myCircle.mCenter.x < 400) { // change 400 to mThreshold
 	 	            	mPrevLocation = LEFTDIR;
 	 	            }
