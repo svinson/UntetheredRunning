@@ -331,8 +331,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 Imgproc.minEnclosingCircle(mMOP2f2, center, radius);
                 circle[i] = new Circle(center, radius[0]);
                 
-                if (points.length > 6 && circle[i].mRadius > maxRad &&
-                    (circle[i].mRadius > MIN_RADIUS_HIGH || (this.safeStateFlag && circle[i].mRadius > MIN_RADIUS_LOW))) {
+                if (/*points.length > 6 &&*/ circle[i].mRadius > maxRad &&
+                    (circle[i].mRadius >= MIN_RADIUS_HIGH || (this.safeStateFlag && circle[i].mRadius >= MIN_RADIUS_LOW))) {
                		maxRad = circle[i].mRadius;
                		bestMatch = i;
                 }
