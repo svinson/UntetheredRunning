@@ -77,7 +77,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	 TIMER_MAX = 50;
     private static final int	 NUM_PLAYED_MAX = 2;
     
-    private boolean			     safeStateFlag = false;	// set flag if valid circle found
+    private boolean			    safeStateFlag = false;	// set flag if valid circle found
     private boolean				first = true;
     private int					dirTimer = 0;
     private int					dirsPlayedLR = 0;
@@ -369,24 +369,26 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
-	            if (myCircle.mCenter.x < 150) { // change to mThreshold
-            		mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
-                    mp.setVolume(volume, volume);
-                    mp.start();
-                    mLost = true;
-                    this.dirTimer = 0;
-                    this.dirsPlayedLR = 0;
-            		mPrevLocation = LEFTDIR;
- 	            }
- 	            else if (myCircle.mCenter.x > 650) {
- 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
-                    mp.setVolume(volume, volume);
-                    mp.start();
-                    mLost = true;
-                    this.dirTimer = 0;
-                    this.dirsPlayedLR = 0;
- 	            	mPrevLocation = RIGHTDIR;
- 	            }
+	            if (!mLost || this.dirTimer == TIMER_MAX) {
+		            if (myCircle.mCenter.x < 150) { // change to mThreshold
+	            		mp = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
+	                    mp.setVolume(volume, volume);
+	                    mp.start();
+	                    mLost = true;
+	                    this.dirTimer = 0;
+	                    this.dirsPlayedLR = 0;
+	            		mPrevLocation = LEFTDIR;
+	 	            }
+	 	            else if (myCircle.mCenter.x > 650) {
+	 	            	mp = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
+	                    mp.setVolume(volume, volume);
+	                    mp.start();
+	                    mLost = true;
+	                    this.dirTimer = 0;
+	                    this.dirsPlayedLR = 0;
+	 	            	mPrevLocation = RIGHTDIR;
+	 	            }
+	            }
 	            
 	            if (mLost) {
 		            if (myCircle.mCenter.x > 250 && myCircle.mCenter.x < 550) {
