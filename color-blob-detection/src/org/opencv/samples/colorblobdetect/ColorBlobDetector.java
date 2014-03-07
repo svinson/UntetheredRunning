@@ -90,8 +90,8 @@ public class ColorBlobDetector {
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
         //Core.inRange(mHsvMat, new Scalar(0, 128, 140), new Scalar(20, 199, 245), mMask);
         Imgproc.dilate(mMask, mDilatedMask, new Mat());
-        //Imgproc.pyrUp(mDilatedMask, rgbaImage);
-        //Imgproc.pyrUp(rgbaImage, rgbaImage);
+        Imgproc.pyrUp(mDilatedMask, rgbaImage);
+        Imgproc.pyrUp(rgbaImage, rgbaImage);
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 
         Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);

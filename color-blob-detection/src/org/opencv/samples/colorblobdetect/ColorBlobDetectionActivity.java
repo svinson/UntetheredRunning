@@ -88,7 +88,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	 BACKDIR = 3;
     
     private static final int	 TIMER_MAX = 25;
-    private static final int	 NUM_PLAYED_MAX = 1;
+    private static final int	 NUM_PLAYED_MAXLR = 2;
+    private static final int	 NUM_PLAYED_MAXFB = 1;
     private static final int	 STOP_SOUND_MAX_PLAY = 3;
     
     private boolean			    safeStateFlag = false;	// set flag if valid circle found
@@ -145,7 +146,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         //mOpenCvCameraView.setMaxFrameSize(320, 240);
         
         //Create a separate Media Player Object for each sound that will be played
-        
         appReadySound = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
         moveLeftSound = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
         moveRightSound = MediaPlayer.create(getApplicationContext(), R.raw.move_right);
@@ -401,6 +401,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             
             if (this.safeStateFlag) {
             	timesPlayedStopSound=0;
+            	dirsPlayedLR = 0;
+            	dirsPlayedFB = 0;
 	            Log.d("VIEWSIZE", "Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
 	            Log.d("VIEWSIZE", "Radius: " + myCircle.mRadius);
 	            // only used for testing
@@ -443,14 +445,14 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 		                mLost = false;
 		                this.dirsPlayedLR = 0;
 		                this.dirTimer = 0;
-		                mPrevLocation = NODIR;
+		                //mPrevLocation = NODIR;
 		            }
 	            }
 	            // If first detecting a bad distance
 	            else if ((!badDistance && (myCircle.mCenter.x < 750 && myCircle.mCenter.x > 50 && 
 	                  myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400)) || this.dirTimer == TIMER_MAX) {
             		if (myCircle.mRadius > 75) { // needs calibration
-            			slowDownSound.start();
+            		 	slowDownSound.start();
 	                    badDistance = true;
 	                    this.dirTimer = 0;
 	                    this.prevDirFB = BACKDIR;
@@ -469,26 +471,15 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             		this.dirTimer = 0;
             		this.prevDirFB = NODIR;
             	}
-            	
-            	this.dirsPlayedFB = 0;
             }
             
-            else if (badDistance && this.dirTimer == TIMER_MAX) {
-        		if(timesPlayedStopSound < STOP_SOUND_MAX_PLAY){
-        			lostMarkerSound.start();
-        			this.dirTimer = 0;
-        			this.prevDirFB = NODIR;
-        			timesPlayedStopSound++;
-        		}
-            }
-            
-            else if (!mLost || this.dirTimer == TIMER_MAX) {
-        		if (this.dirsPlayedLR >= NUM_PLAYED_MAX || (mPrevLocation != NODIR && !mLost)) {
+            else if (!mLost || (mLost && this.dirTimer == TIMER_MAX)) {
+        		if (this.dirsPlayedLR >= NUM_PLAYED_MAXLR || (mPrevLocation == NODIR && !mLost)) {
         			if(timesPlayedStopSound < STOP_SOUND_MAX_PLAY){
         				lostMarkerSound.start();
                     	this.dirTimer = 0;
                     	mLost = true;
-                    	this.dirsPlayedLR = NUM_PLAYED_MAX;
+                    	//this.dirsPlayedLR = NUM_PLAYED_MAX;
                     	timesPlayedStopSound++;
         			}
             	}
@@ -506,6 +497,25 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	}
             }
 
+            else if (badDistance && this.dirTimer == TIMER_MAX) {
+                if (this.dirsPlayedFB >= NUM_PLAYED_MAXFB && timesPlayedStopSound < STOP_SOUND_MAX_PLAY) {
+        			lostMarkerSound.start();
+        			this.dirTimer = 0;
+        			this.prevDirFB = NODIR;
+        			timesPlayedStopSound++;
+                }
+  	          	else if (this.prevDirFB == BACKDIR) {
+  	          		slowDownSound.start();
+  	                  this.dirTimer = 0;
+  	                  this.dirsPlayedFB++;
+  	          	}
+  	          	else if (this.prevDirFB == FRONTDIR) {
+  	          		speedUpSound.start();
+  	  				this.dirTimer = 0;
+  	  				this.dirsPlayedFB++;
+  	          	}
+
+            }
             
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
