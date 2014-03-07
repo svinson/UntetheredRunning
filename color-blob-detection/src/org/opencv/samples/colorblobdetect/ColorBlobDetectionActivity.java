@@ -24,6 +24,7 @@ import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -104,6 +105,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	MIN_RADIUS_HIGH = 20; // not calibrated
     private static final int	MIN_RADIUS_LOW = 10; // not calibrated
     
+    private PowerManager.WakeLock wl;
+    
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -145,6 +148,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mOpenCvCameraView.setCvCameraViewListener(this);
         //mOpenCvCameraView.setMaxFrameSize(320, 240);
         
+        PowerManager pm = (PowerManager)getApplicationContext().getSystemService(Context.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WAKELOCK");
+        
+        
+        
         //Create a separate Media Player Object for each sound that will be played
         appReadySound = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
         moveLeftSound = MediaPlayer.create(getApplicationContext(), R.raw.move_left);
@@ -182,9 +190,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     @Override
     public void onPause() {
         super.onPause();
-        if (mOpenCvCameraView != null)
+      /*  if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-        appClosedSound.start();
+        appClosedSound.start();*/
     }
 
     @Override
@@ -247,6 +255,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 appStartedSound.start();
     			appFirstRun = true;
     		}
+    		wl.acquire();
       	}
     	//App was in running state
     	else {
@@ -258,6 +267,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     		startStopBtn.setText(R.string.START_APP_STRING);
     		trackingStoppedSound.start();
     		appHasStarted = false;
+    		wl.release();
     	}
     }
     
@@ -445,7 +455,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 		                mLost = false;
 		                this.dirsPlayedLR = 0;
 		                this.dirTimer = 0;
-		                //mPrevLocation = NODIR;
+		                mPrevLocation = NODIR;
 		            }
 	            }
 	            // If first detecting a bad distance
@@ -473,7 +483,27 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	}
             }
             
-            else if (!mLost || (mLost && this.dirTimer == TIMER_MAX)) {
+            else if (badDistance && this.dirTimer == TIMER_MAX) {
+                if (this.dirsPlayedFB >= NUM_PLAYED_MAXFB && timesPlayedStopSound < STOP_SOUND_MAX_PLAY) {
+        			lostMarkerSound.start();
+        			this.dirTimer = 0;
+        			this.prevDirFB = NODIR;
+        			timesPlayedStopSound++;
+                }
+  	          	else if (this.prevDirFB == BACKDIR) {
+  	          		slowDownSound.start();
+  	                  this.dirTimer = 0;
+  	                  this.dirsPlayedFB++;
+  	          	}
+  	          	else if (this.prevDirFB == FRONTDIR) {
+  	          		speedUpSound.start();
+  	  				this.dirTimer = 0;
+  	  				this.dirsPlayedFB++;
+  	          	}
+
+            }
+            
+            else if (!mLost || this.dirTimer == TIMER_MAX) {
         		if (this.dirsPlayedLR >= NUM_PLAYED_MAXLR || (mPrevLocation == NODIR && !mLost)) {
         			if(timesPlayedStopSound < STOP_SOUND_MAX_PLAY){
         				lostMarkerSound.start();
@@ -495,26 +525,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     this.dirsPlayedLR++;
                     mLost = true;
             	}
-            }
-
-            else if (badDistance && this.dirTimer == TIMER_MAX) {
-                if (this.dirsPlayedFB >= NUM_PLAYED_MAXFB && timesPlayedStopSound < STOP_SOUND_MAX_PLAY) {
-        			lostMarkerSound.start();
-        			this.dirTimer = 0;
-        			this.prevDirFB = NODIR;
-        			timesPlayedStopSound++;
-                }
-  	          	else if (this.prevDirFB == BACKDIR) {
-  	          		slowDownSound.start();
-  	                  this.dirTimer = 0;
-  	                  this.dirsPlayedFB++;
-  	          	}
-  	          	else if (this.prevDirFB == FRONTDIR) {
-  	          		speedUpSound.start();
-  	  				this.dirTimer = 0;
-  	  				this.dirsPlayedFB++;
-  	          	}
-
             }
             
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
