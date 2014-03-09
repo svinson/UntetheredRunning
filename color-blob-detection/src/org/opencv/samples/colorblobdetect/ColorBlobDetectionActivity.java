@@ -89,8 +89,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	 BACKDIR = 3;
     
     private static final int	 TIMER_MAX = 25;
-    private static final int	 NUM_PLAYED_MAXLR = 2;
-    private static final int	 NUM_PLAYED_MAXFB = 1;
+    private static final int	 NUM_PLAYED_MAXLR = 3;
+    private static final int	 NUM_PLAYED_MAXFB = 3;
     private static final int	 STOP_SOUND_MAX_PLAY = 3;
     
     private boolean			    safeStateFlag = false;	// set flag if valid circle found
@@ -222,6 +222,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         lostMarkerSound.release();
         appReadySound.release();
         trackingStoppedSound.release();
+        
+        wl.release();
     }
 
     public void onCameraViewStarted(int width, int height) {
@@ -325,6 +327,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     		appHasStarted = true;
     		appFirstRun = true;
     		appStartedSound.start();
+    		wl.acquire();
         }
 
         return false; // don't need subsequent touch events
@@ -427,19 +430,19 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	 	            	mPrevLocation = RIGHTDIR;
 	 	            }
 	            }
-	            else {
+	            else if(!mLost) {
 	            	mPrevLocation = NODIR;
 	            }
 	            // If target is beyond on-screen L/R threshold
 	            if (!mLost || this.dirTimer == TIMER_MAX) {
-		            if (myCircle.mCenter.x < 150) { // change to mThreshold
+		            if (myCircle.mCenter.x < 100) { // change to mThreshold //changed from 150
 		            	moveLeftSound.start();
 	                    mLost = true;
 	                    this.dirTimer = 0;
 	                    this.dirsPlayedLR++;
 	            		mPrevLocation = LEFTDIR;
 	 	            }
-	 	            else if (myCircle.mCenter.x > 650) {
+	 	            else if (myCircle.mCenter.x > 700) { //changed from 650
 	 	            	moveRightSound.start();
 	                    mLost = true;
 	                    this.dirTimer = 0;
@@ -455,7 +458,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 		                mLost = false;
 		                this.dirsPlayedLR = 0;
 		                this.dirTimer = 0;
-		                mPrevLocation = NODIR;
+		                //mPrevLocation = NODIR;
 		            }
 	            }
 	            // If first detecting a bad distance
@@ -467,7 +470,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	                    this.dirTimer = 0;
 	                    this.prevDirFB = BACKDIR;
             		}
-            		else if (myCircle.mRadius < 32) { // needs calibration (changed from 35)
+            		else if (myCircle.mRadius < 28) { // needs calibration (changed from 35) and 32
             			speedUpSound.start();
         				badDistance = true;
         				this.dirTimer = 0;
@@ -475,7 +478,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             		}
             	}
 	            // If previously detected a bad distance and returned from bad distance
-	            else if ((badDistance && myCircle.mRadius < 60 && myCircle.mRadius > 40)) { //changed from 55 and 44
+	            else if ((badDistance && myCircle.mRadius < 65 && myCircle.mRadius > 45)) { //changed from 55 and 44
 	            	goodDistanceSound.start();
             		badDistance = false;
             		this.dirTimer = 0;
@@ -483,7 +486,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	}
             }
             
-            else if (badDistance && this.dirTimer == TIMER_MAX) {
+            /*else if (badDistance && this.dirTimer == TIMER_MAX) {
                 if (this.dirsPlayedFB >= NUM_PLAYED_MAXFB && timesPlayedStopSound < STOP_SOUND_MAX_PLAY) {
         			lostMarkerSound.start();
         			this.dirTimer = 0;
@@ -501,10 +504,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
   	  				this.dirsPlayedFB++;
   	          	}
 
-            }
+            }*/
             
             else if (!mLost || this.dirTimer == TIMER_MAX) {
-        		if (this.dirsPlayedLR >= NUM_PLAYED_MAXLR || (mPrevLocation == NODIR && !mLost)) {
+        		if (this.dirsPlayedLR >= NUM_PLAYED_MAXLR){ //|| (mPrevLocation == NODIR && !mLost)) {
         			if(timesPlayedStopSound < STOP_SOUND_MAX_PLAY){
         				lostMarkerSound.start();
                     	this.dirTimer = 0;
