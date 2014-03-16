@@ -22,7 +22,6 @@ import org.opencv.imgproc.Imgproc;
 import android.app.Activity;
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.SystemClock;
@@ -34,35 +33,33 @@ import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.TextView;
-
 
 public class ColorBlobDetectionActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "OCVSample::Activity";
 
-    private boolean              mIsColorSelected = false;
-    private boolean 			 appHasStarted = false;
-    private boolean				 appFirstRun = false;
+    private boolean              mIsColorSelected = false;	// determines if a color has been selected
+    private boolean 			 appHasStarted = false;		// determines if tracking is on/off
+    private boolean				 appFirstRun = false;		// determines if app has just started
     
-    private boolean 			 badDistance = false;
+    private boolean 			 badDistance = false;		// used for forward/back alg if the marker is outside a threshold
     
-    private Mat                  mRgba;
-    //private Mat                  binaryImg;
-    private Scalar               mBlobColorRgba;
-    private Scalar               mBlobColorHsv;
-    private ColorBlobDetector    mDetector;
-    private Mat                  mSpectrum;
-    private Size                 SPECTRUM_SIZE;
-    private Scalar               CONTOUR_COLOR;
-    private int                  mPrevLocation = NODIR;
-    private int					 mThreshold = 400; // should change to a dynamic value
-    private boolean              mLost = false;
+    private Mat                  mRgba;				// used for color detection
+    private Scalar               mBlobColorRgba;	// used for color detection
+    private Scalar               mBlobColorHsv;		// used for color detection
+    private ColorBlobDetector    mDetector;			// used for color detection
+    private Mat                  mSpectrum;			// used for color detection
+    private Size                 SPECTRUM_SIZE;		// used for color detection
+    private Scalar               CONTOUR_COLOR;  	// used for color detection
+    private int                  mPrevLocation = NODIR;	// used for left/right alg if marker leaves screen without crossing threshold
+    private int					 mThreshold = 400; // should change all thresholds to a dynamic value
+    private boolean              mLost = false;	// used for left/right alg if marker leaves screen
     
     private Button               startStopBtn;
 
     private float 				 volume = 1.0f;
     
-    private MediaPlayer 		 moveLeftSound; 
+    // voice command players
+    private MediaPlayer 		 moveLeftSound;
     private MediaPlayer			 moveRightSound;
     private MediaPlayer			 speedUpSound;
     private MediaPlayer			 slowDownSound;
@@ -74,7 +71,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private MediaPlayer			 lostMarkerSound;
     private MediaPlayer			 appReadySound;
     private MediaPlayer			 trackingStoppedSound;
-    
     
     private MatOfPoint2f mMOP2f1; 
     private MatOfPoint2f mMOP2f2;
@@ -88,17 +84,17 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private static final int	 FRONTDIR = 2;
     private static final int	 BACKDIR = 3;
     
-    private static final int	 TIMER_MAX = 25;
-    private static final int	 NUM_PLAYED_MAXLR = 3;
-    private static final int	 NUM_PLAYED_MAXFB = 3;
-    private static final int	 STOP_SOUND_MAX_PLAY = 3;
+    private static final int	 TIMER_MAX = 25;		// number of frames before repeating some commands
+    private static final int	 NUM_PLAYED_MAXLR = 3;	// caps number of times left/right was played
+    private static final int	 NUM_PLAYED_MAXFB = 3;	// caps number of times front/back was played
+    private static final int	 STOP_SOUND_MAX_PLAY = 3;	// caps number of times "stop" was played
     
-    private boolean			    safeStateFlag = false;	// set flag if valid circle found
+    private boolean			    safeStateFlag = false;	// set on each frame if valid circle found
     private boolean				first = true;
-    private int					dirTimer = 0;
-    private int					dirsPlayedLR = 0;
-    private int					dirsPlayedFB = 0;
-    private int					timesPlayedStopSound = 0;
+    private int					dirTimer = 0;	// counts up to TIMER_MAX to repeat some commands
+    private int					dirsPlayedLR = 0;	// counts number of times left/right was played
+    private int					dirsPlayedFB = 0;	// counts number of times front/back was played
+    private int					timesPlayedStopSound = 0;	// counts number of times "stop" was played
     
     private int					prevDirFB = NODIR;
     
@@ -124,34 +120,26 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         }
     };
 
-    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	/*WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
-    	Log.d("WiFi","Wi" + wifiManager.isWifiEnabled());
-    	while(wifiManager.isWifiEnabled() == true){
-    		wifiManager.setWifiEnabled(false);
-    		Log.d("WiFi","WiFi stuck");
-    	}
-    	Log.d("WiFi","Wi Off?" + wifiManager.isWifiEnabled());*/
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.color_blob_detection_surface_view);
 
+        // initialize button
         startStopBtn = (Button) findViewById(R.id.buttonStartStop);
         startStopBtn.setText(R.string.START_APP_STRING);
         
+        // initialize camera view
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        //mOpenCvCameraView.setMaxFrameSize(320, 240);
         
+        // initialize wake lock, used to keep app running while screen is off
         PowerManager pm = (PowerManager)getApplicationContext().getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WAKELOCK");
-        
-        
         
         //Create a separate Media Player Object for each sound that will be played
         appReadySound = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
@@ -168,7 +156,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         appReadySound = MediaPlayer.create(getApplicationContext(), R.raw.app_ready);
         trackingStoppedSound = MediaPlayer.create(getApplicationContext(), R.raw.tracking_stopped);
         
-        //Set the volume for each sound to be max
+        //Set the volume for each sound to max
         appReadySound.setVolume(volume,volume);
         moveLeftSound.setVolume(volume,volume);
         moveRightSound.setVolume(volume,volume);
@@ -184,15 +172,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         trackingStoppedSound.setVolume(volume,volume);
                 
         appReadySound.start();
-
     }
 
     @Override
     public void onPause() {
         super.onPause();
-      /*  if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-        appClosedSound.start();*/
     }
 
     @Override
@@ -206,8 +190,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     public void onDestroy() {
         super.onDestroy();
-        if (mOpenCvCameraView != null)
+        
+        // release objects
+        if (mOpenCvCameraView != null) {
             mOpenCvCameraView.disableView();
+        }
         
         appReadySound.release();
         moveLeftSound.release();
@@ -228,8 +215,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
-        //binaryImg = new Mat();
-        if(first) {
+        if (first) {
         	mDetector = new ColorBlobDetector();
         }
         first = false;
@@ -244,11 +230,14 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         mRgba.release();
     }
 
+    // button press callback
     public void startStopAppOnClick(View view) {
-    	//App is in not tracking state
+    	//App is not tracking
     	if (!appHasStarted) {
     		startStopBtn.setText(R.string.STOP_APP_STRING);
     		appHasStarted = true;
+    		wl.acquire();
+    		
     		//App has tracked at least once
     		if (appFirstRun) {
     			appResumedSound.start();
@@ -257,7 +246,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 appStartedSound.start();
     			appFirstRun = true;
     		}
-    		wl.acquire();
       	}
     	//App was in running state
     	else {
@@ -265,25 +253,25 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     		mLost = false;
     		safeStateFlag = false;
     		mPrevLocation = NODIR;
+    		appHasStarted = false;
+    		wl.release();
     		
     		startStopBtn.setText(R.string.START_APP_STRING);
     		trackingStoppedSound.start();
-    		appHasStarted = false;
-    		wl.release();
     	}
     }
     
+    // callback for touching camera view to select color
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
+        
         if (!mIsColorSelected) {
 	        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
 	        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
 	
 	        int x = (int)event.getX() - xOffset;
 	        int y = (int)event.getY() - yOffset;
-	
-	        // Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
 	
 	        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
 	
@@ -308,21 +296,21 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	
 	        mBlobColorRgba = converScalarHsv2Rgba(mBlobColorHsv);
 	
-	        Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
-	                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
+	        /*Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
+	                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");*/
 	
 	        mDetector.setHsvColor(mBlobColorHsv);
-	        Log.i("HSV", mBlobColorHsv.val[0] + " " + mBlobColorHsv.val[1] +
-	                " " + mBlobColorHsv.val[2] + " " + mBlobColorHsv.val[3]);
+	        /*Log.i("HSV", mBlobColorHsv.val[0] + " " + mBlobColorHsv.val[1] +
+	                " " + mBlobColorHsv.val[2] + " " + mBlobColorHsv.val[3]);*/
 	        
 	        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
 	
-	        mIsColorSelected = true;
-	
 	        touchedRegionRgba.release();
 	        touchedRegionHsv.release();
-	        
-	        appHasStarted = true;
+
+	        mIsColorSelected = true;
+
+	        // duplicates start button code
 	        startStopBtn.setText(R.string.STOP_APP_STRING);
     		appHasStarted = true;
     		appFirstRun = true;
@@ -333,6 +321,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         return false; // don't need subsequent touch events
     }
 
+    // the marker is always represented as a circle
     private class Circle {
     	public Point mCenter;
     	public float mRadius; 
@@ -348,9 +337,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	}
     }
     
+    // on each photo taken by the camera, happens repeatedly while app is tracking
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {    	
         mRgba = inputFrame.rgba();
-        //binaryImg = inputFrame.gray();
         mMOP2f1 = new MatOfPoint2f();
         mMOP2f2 = new MatOfPoint2f();
  
@@ -383,22 +372,18 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 Imgproc.minEnclosingCircle(mMOP2f2, center, radius);
                 circle[i] = new Circle(center, radius[0]);
                 
-                if (/*points.length > 6 &&*/ circle[i].mRadius > maxRad &&
-                    (circle[i].mRadius >= MIN_RADIUS_HIGH || (this.safeStateFlag && circle[i].mRadius >= MIN_RADIUS_LOW))) {
+                // look through possible contours for shape with biggest radius
+                if (circle[i].mRadius > maxRad && (circle[i].mRadius >= MIN_RADIUS_HIGH ||
+                     (this.safeStateFlag && circle[i].mRadius >= MIN_RADIUS_LOW))) {
                		maxRad = circle[i].mRadius;
                		bestMatch = i;
                 }
 
                 //Convert back to MatOfPoint and put the new values back into the contours list
                 mMOP2f2.convertTo(contours.get(i), CvType.CV_32S);                
-                //Log.d("Center", "Center: X: " + center.x + " Y: " + center.y);
-                //Log.d("Center", "Radius: " + radius[0]);
             }
             
             if (bestMatch >= 0) {
-            	if (this.safeStateFlag == false) {
-            		// maybe add feedback here saying marker was detected
-            	}
             	myCircle = circle[bestMatch];
             	this.safeStateFlag = true;
             	Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
@@ -406,43 +391,51 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             else {
                 this.safeStateFlag = false;
             }
+
             
-            /*for(int i=0; i < contours.size(); i++) {
-            	if (circle[i] != null)
-            		Log.d("List", "Circle: " + i + "X: " + circle[i].mCenter.x + "Y: " + circle[i].mCenter.y);
-            }*/
+         	// tracking algorithm is below
+            // all thresholds should be changed to dynamic values based on video frame size
+            // these values are based on max x coordinate = 800 and max y coordinate = 480
+            // max x and y coordinates can be found in the log, probably from the openCV code
             
+            
+            // marker is detected
             if (this.safeStateFlag) {
-            	timesPlayedStopSound=0;
+            	timesPlayedStopSound = 0;
             	dirsPlayedLR = 0;
             	dirsPlayedFB = 0;
+            	
+            	/*// used for testing
 	            Log.d("VIEWSIZE", "Point: X: " + myCircle.mCenter.x + " Y: " + myCircle.mCenter.y);
-	            Log.d("VIEWSIZE", "Radius: " + myCircle.mRadius);
-	            // only used for testing
+	            Log.d("VIEWSIZE", "Radius: " + myCircle.mRadius);*/
 	           
 	            Core.circle(mRgba, myCircle.mCenter, (int) myCircle.mRadius, CONTOUR_COLOR, 3);
 	            
+	            // prevLocation used to give left/right command if marker disappears from screen without passing thresholds
+	            // this means the app will give correct left/right commands at very high turning speed/lateral speed 
+	            // Y threshold used in case marker disappears off top or bottom of screen
 	            if (myCircle.mCenter.y > 100 && myCircle.mCenter.y < 350) {
-	            	if (myCircle.mCenter.x < 400) { // change 400 to mThreshold
+	            	if (myCircle.mCenter.x < 400) { // 0 deg from center
 	 	            	mPrevLocation = LEFTDIR;
 	 	            }
 	 	            else {
 	 	            	mPrevLocation = RIGHTDIR;
 	 	            }
 	            }
-	            else if(!mLost) {
+	            else if (!mLost) {
 	            	mPrevLocation = NODIR;
 	            }
-	            // If target is beyond on-screen L/R threshold
+	            
+	            // applies if target is beyond on-screen L/R threshold
 	            if (!mLost || this.dirTimer == TIMER_MAX) {
-		            if (myCircle.mCenter.x < 100) { // change to mThreshold //changed from 150
+		            if (myCircle.mCenter.x < 100) {		// approx. 19 deg to left
 		            	moveLeftSound.start();
 	                    mLost = true;
 	                    this.dirTimer = 0;
 	                    this.dirsPlayedLR++;
 	            		mPrevLocation = LEFTDIR;
 	 	            }
-	 	            else if (myCircle.mCenter.x > 700) { //changed from 650
+	 	            else if (myCircle.mCenter.x > 700) {		// approx. 19 deg to right
 	 	            	moveRightSound.start();
 	                    mLost = true;
 	                    this.dirTimer = 0;
@@ -453,24 +446,24 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 	            
 	            // If returning from a bad position
 	            if (mLost) {
-		            if (myCircle.mCenter.x > 250 && myCircle.mCenter.x < 550) {
+		            if (myCircle.mCenter.x > 250 && myCircle.mCenter.x < 550) {  // approx. 7 deg to left and right of center
 		            	goodPositionSound.start();
 		                mLost = false;
 		                this.dirsPlayedLR = 0;
 		                this.dirTimer = 0;
-		                //mPrevLocation = NODIR;
 		            }
 	            }
-	            // If first detecting a bad distance
+	            // Detecting a bad distance based on radius
+	            // checks that marker is not on edge of screen, distorting radius
 	            else if ((!badDistance && (myCircle.mCenter.x < 750 && myCircle.mCenter.x > 50 && 
 	                  myCircle.mCenter.y > 50 && myCircle.mCenter.y < 400)) || this.dirTimer == TIMER_MAX) {
-            		if (myCircle.mRadius > 75) { // needs calibration
+            		if (myCircle.mRadius > 75) { // approx. 3'8"
             		 	slowDownSound.start();
 	                    badDistance = true;
 	                    this.dirTimer = 0;
 	                    this.prevDirFB = BACKDIR;
             		}
-            		else if (myCircle.mRadius < 28) { // needs calibration (changed from 35) and 32
+            		else if (myCircle.mRadius < 28) { // approx. 10'0"
             			speedUpSound.start();
         				badDistance = true;
         				this.dirTimer = 0;
@@ -478,7 +471,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             		}
             	}
 	            // If previously detected a bad distance and returned from bad distance
-	            else if ((badDistance && myCircle.mRadius < 65 && myCircle.mRadius > 45)) { //changed from 55 and 44
+	            else if ((badDistance && myCircle.mRadius < 65 && myCircle.mRadius > 45)) { // approx. 5'6" and 8'0"
 	            	goodDistanceSound.start();
             		badDistance = false;
             		this.dirTimer = 0;
@@ -486,6 +479,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	}
             }
             
+            // for distance commands to repeat while marker is off screen
             /*else if (badDistance && this.dirTimer == TIMER_MAX) {
                 if (this.dirsPlayedFB >= NUM_PLAYED_MAXFB && timesPlayedStopSound < STOP_SOUND_MAX_PLAY) {
         			lostMarkerSound.start();
@@ -506,13 +500,13 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
             }*/
             
+            // for position commands to play while marker is off screen
             else if (!mLost || this.dirTimer == TIMER_MAX) {
-        		if (this.dirsPlayedLR >= NUM_PLAYED_MAXLR){ //|| (mPrevLocation == NODIR && !mLost)) {
-        			if(timesPlayedStopSound < STOP_SOUND_MAX_PLAY){
+        		if (this.dirsPlayedLR >= NUM_PLAYED_MAXLR || (mPrevLocation == NODIR && !mLost)) {
+        			if (timesPlayedStopSound < STOP_SOUND_MAX_PLAY){
         				lostMarkerSound.start();
                     	this.dirTimer = 0;
                     	mLost = true;
-                    	//this.dirsPlayedLR = NUM_PLAYED_MAX;
                     	timesPlayedStopSound++;
         			}
             	}
